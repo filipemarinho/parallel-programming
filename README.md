@@ -1,2 +1,2 @@
 # parallel-programming
-Repo to store project of parallel programmimg 
+Repo to store projects of parallel programmimg 
