@@ -9,9 +9,14 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
+    string filename = argv[1];
 
-    char *filename = argv[1];
-    cout << "Nome do arquivo: " << filename << endl;
+    if(filename.substr(filename.find_last_of(".") + 1) == "net") {
+    std::cout << "Nome do arquivo: " << filename << std::endl;
+    } else {
+        std::cout << "No..." << std::endl;
+        return 0;
+    }
 
     // Read Line
     string line;
