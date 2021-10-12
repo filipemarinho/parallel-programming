@@ -19,7 +19,8 @@ int main(int argc, char *argv[])
 
     // Read Line
     string line;
-
+    int number;
+    int number1;
     // Read from the text file
     ifstream input_file(filename);
     if (!input_file.is_open()) {
@@ -28,8 +29,8 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    while (input_file >> number) {
-        cout << number << "; ";
+    while (input_file >> number >> number1) {
+        cout << number << "; "<< number1 << "; " << endl;
     }
     cout << endl;
     input_file.close();
