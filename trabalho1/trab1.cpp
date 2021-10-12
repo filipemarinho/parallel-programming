@@ -1,5 +1,4 @@
-// Execute: ./trab1 graph.net
-
+//g++ -o trab1.o trab1.cpp && ./trab1.o graph.net
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -22,8 +21,20 @@ int main(int argc, char *argv[])
     string line;
 
     // Read from the text file
-    ifstream file(filename);
+    ifstream input_file(filename);
+    if (!input_file.is_open()) {
+        cerr << "Could not open the file - '"
+             << filename << "'" << endl;
+        return EXIT_FAILURE;
+    }
 
+    while (input_file >> number) {
+        cout << number << "; ";
+    }
+    cout << endl;
+    input_file.close();
+
+/* 
     // Number of vertices
     getline(file, line);
     int n_v = std::stoi(line);
@@ -38,10 +49,14 @@ int main(int argc, char *argv[])
     for (int i = 0; i < n_v; i++)
     {
         getline(file, line);
-        cout << "linha " << i << ": " << line[0] << "," << line[2] << endl;
+        int vert_a;
+        sscanf(line.c_str(), "%d", &vert_a);
+        int vert_b;
+        sscanf(line.c_str(), "%d", &vert_b);
+        cout << "linha " << i << ": " << vert_a << "," << vert_b << endl; //Fails with numbers > 9, 
     }
 
     // Close the file
-    file.close();
+    file.close(); */
     return 0;
 }
