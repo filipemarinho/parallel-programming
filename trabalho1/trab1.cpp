@@ -33,29 +33,3 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
-
-/* 
-    // Number of vertices
-    getline(file, line);
-    int n_v = std::stoi(line);
-
-    //Number of arestas
-    getline(file, line);
-    int n_a = std::stoi(line);
-
-    cout << "Numero de vertices: " << n_v << ", Numero de arestas: " << n_a << endl;
-
-    //Identificadores de arestas
-    for (int i = 0; i < n_v; i++)
-    {
-        getline(file, line);
-        int vert_a;
-        sscanf(line.c_str(), "%d", &vert_a);
-        int vert_b;
-        sscanf(line.c_str(), "%d", &vert_b);
-        cout << "linha " << i << ": " << vert_a << "," << vert_b << endl; //Fails with numbers > 9, 
-    }
-
-    // Close the file
-    file.close(); */
