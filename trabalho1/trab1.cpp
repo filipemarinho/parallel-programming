@@ -8,52 +8,14 @@ typedef std::vector<std::vector<int>> matrix_t;
 
 using namespace std;
 
-void printMatrix(matrix_t matrix){
-    for (auto i = 0; i < matrix.size(); i++)
-    {
-        cout << "Matrix line " << i << endl;
-        for (int j = 0; j < matrix[i].size(); j++)
-        {
-            cout << matrix[i][j] << ", ";
-        }
-        cout << endl;
-    }
+//Print Matrix to cout
+void printMatrix(matrix_t matrix);
 
-    cout << endl;
-}
+//Return the adj list of a graph based on the vertex list
+matrix_t listAdj(int size, vector<int> vert0, vector<int> vert1);
 
-matrix_t listAdj(int size, vector<int> vert0, vector<int> vert1)
-{
-    matrix_t adjList(size);
-
-    for (int i = 0; i < vert0.size(); i++)
-    {
-        //cout << "Linha: " << i << ", Aresta: " << vert0[i] << "," << vert1[i] << endl;
-        adjList[vert0[i]].push_back(vert1[i]);
-        adjList[vert1[i]].push_back(vert0[i]);
-    }
-
-    cout << "List Adj Result" << endl;
-    printMatrix(adjList);
-    return adjList;
-}
-
-
-matrix_t matrixAdj(int size, vector<int> vert0, vector<int> vert1) 
-{
-    matrix_t adjMatrix(size, vector<int>(size, 0));
-
-    for (int i = 0; i < vert0.size(); i++)
-    {
-        adjMatrix[vert0[i]][vert1[i]] = 1;
-        adjMatrix[vert1[i]][vert0[i]] = 1;
-    }
-
-    cout << "Matrix Adj Result" << endl;
-    printMatrix(adjMatrix);
-
-    return adjMatrix;
-}
+//Return the adj matrix of a graph based on the vertex list
+matrix_t matrixAdj(int size, vector<int> vert0, vector<int> vert1);
 
 int main(int argc, char *argv[])
 {
@@ -90,4 +52,50 @@ int main(int argc, char *argv[])
 
 
     return 0;
+}
+
+matrix_t listAdj(int size, vector<int> vert0, vector<int> vert1)
+{
+    matrix_t adjList(size);
+
+    for (int i = 0; i < vert0.size(); i++)
+    {
+        //cout << "Linha: " << i << ", Aresta: " << vert0[i] << "," << vert1[i] << endl;
+        adjList[vert0[i]].push_back(vert1[i]);
+        adjList[vert1[i]].push_back(vert0[i]);
+    }
+
+    cout << "List Adj Result" << endl;
+    printMatrix(adjList);
+    return adjList;
+}
+
+matrix_t matrixAdj(int size, vector<int> vert0, vector<int> vert1) 
+{
+    matrix_t adjMatrix(size, vector<int>(size, 0));
+
+    for (int i = 0; i < vert0.size(); i++)
+    {
+        adjMatrix[vert0[i]][vert1[i]] = 1;
+        adjMatrix[vert1[i]][vert0[i]] = 1;
+    }
+
+    cout << "Matrix Adj Result" << endl;
+    printMatrix(adjMatrix);
+
+    return adjMatrix;
+}
+
+void printMatrix(matrix_t matrix){
+    for (auto i = 0; i < matrix.size(); i++)
+    {
+        cout << "Matrix line " << i << endl;
+        for (int j = 0; j < matrix[i].size(); j++)
+        {
+            cout << matrix[i][j] << ", ";
+        }
+        cout << endl;
+    }
+
+    cout << endl;
 }
