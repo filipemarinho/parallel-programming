@@ -4,20 +4,22 @@
 #include <vector>
 #include <string>
 
+typedef std::vector<std::vector<int>> adj_list_t; 
+
 using namespace std;
 
-void listAdj(vector<int> vert0, vector<int> vert1)
+adj_list_t listAdj(int size, vector<int> vert0, vector<int> vert1)
 {
-    vector<vector<int>> adjList(vert0.size());
+    adj_list_t adjList(size);
 
     for (int i = 0; i < vert0.size(); i++)
     {
-        cout << "Linha: " << i << ", Aresta: " << vert0[i] << "," << vert1[i] << endl;
+        //cout << "Linha: " << i << ", Aresta: " << vert0[i] << "," << vert1[i] << endl;
         adjList[vert0[i]].push_back(vert1[i]);
         adjList[vert1[i]].push_back(vert0[i]);
     }
 
-
+    // Print result 
     for (int i = 0; i < adjList.size(); i++)
     {
         cout << "Adj List of element " << i << endl;
@@ -28,8 +30,9 @@ void listAdj(vector<int> vert0, vector<int> vert1)
         cout << endl;
     }
 
-    return;
+    return adjList;
 }
+
 
 int main(int argc, char *argv[])
 {
@@ -56,9 +59,9 @@ int main(int argc, char *argv[])
         inputFile >> vertA[i] >> vertB[i];
         //cout << "Aresta: " << vertA[i] << "," << vertB[i] << endl;
     }
-    cout << "File read!" << endl;
+    cout << "File read!" << endl << "\n";
 
-    listAdj(vertA, vertB);
+    adj_list_t adjList = listAdj(nVert, vertA, vertB);
 
     inputFile.close();
 
