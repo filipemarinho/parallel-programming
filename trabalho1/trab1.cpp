@@ -8,6 +8,18 @@ typedef std::vector<std::vector<int>> matrix_t;
 
 using namespace std;
 
+void printMatrix(matrix_t matrix){
+    for (auto i = 0; i < matrix.size(); i++)
+    {
+        cout << "Matrix line " << i << endl;
+        for (int j = 0; j < matrix[i].size(); j++)
+        {
+            cout << matrix[i][j] << ", ";
+        }
+        cout << endl;
+    }
+}
+
 matrix_t listAdj(int size, vector<int> vert0, vector<int> vert1)
 {
     matrix_t adjList(size);
@@ -19,6 +31,8 @@ matrix_t listAdj(int size, vector<int> vert0, vector<int> vert1)
         adjList[vert1[i]].push_back(vert0[i]);
     }
 
+    cout << "List Adj Result" << endl;
+    printMatrix(adjList);
     return adjList;
 }
 
@@ -33,16 +47,9 @@ matrix_t matrixAdj(int size, vector<int> vert0, vector<int> vert1)
         adjMatrix[vert1[i]][vert0[i]] = 1;
     }
 
-    // Print result 
-    for (int i = 0; i < adjMatrix.size(); i++)
-    {
-        cout << "Adj Matrix line " << i << endl;
-        for (int j = 0; j < adjMatrix[i].size(); j++)
-        {
-            cout << adjMatrix[i][j] << ", ";
-        }
-        cout << endl;
-    }
+    cout << "Matrix Adj Result" << endl;
+    printMatrix(adjMatrix);
+
     return adjMatrix;
 }
 
@@ -74,8 +81,10 @@ int main(int argc, char *argv[])
     cout << "File read!" << endl << "\n";
     inputFile.close();
 
+    //sorting the initial edges list would optmize caching in element acess
+
     matrix_t adjList = listAdj(nVert, vertA, vertB);
-    matrix_t  adjMatrix = matrixAdj(nVert, vertA, vertB);
+    matrix_t adjMatrix = matrixAdj(nVert, vertA, vertB);
 
 
     return 0;
