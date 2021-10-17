@@ -4,13 +4,13 @@
 #include <vector>
 #include <string>
 
-typedef std::vector<std::vector<int>> adj_list_t; 
+typedef std::vector<std::vector<int>> matrix_t; 
 
 using namespace std;
 
-adj_list_t listAdj(int size, vector<int> vert0, vector<int> vert1)
+matrix_t listAdj(int size, vector<int> vert0, vector<int> vert1)
 {
-    adj_list_t adjList(size);
+    matrix_t adjList(size);
 
     for (int i = 0; i < vert0.size(); i++)
     {
@@ -19,20 +19,32 @@ adj_list_t listAdj(int size, vector<int> vert0, vector<int> vert1)
         adjList[vert1[i]].push_back(vert0[i]);
     }
 
-    // Print result 
-    for (int i = 0; i < adjList.size(); i++)
-    {
-        cout << "Adj List of element " << i << endl;
-        for (int j = 0; j < adjList[i].size(); j++)
-        {
-            cout << adjList[i][j] << ", ";
-        }
-        cout << endl;
-    }
-
     return adjList;
 }
 
+
+matrix_t matrixAdj(int size, vector<int> vert0, vector<int> vert1) 
+{
+    matrix_t adjMatrix(size, vector<int>(size, 0));
+
+    for (int i = 0; i < vert0.size(); i++)
+    {
+        adjMatrix[vert0[i]][vert1[i]] = 1;
+        adjMatrix[vert1[i]][vert0[i]] = 1;
+    }
+
+    // Print result 
+    for (int i = 0; i < adjMatrix.size(); i++)
+    {
+        cout << "Adj Matrix line " << i << endl;
+        for (int j = 0; j < adjMatrix[i].size(); j++)
+        {
+            cout << adjMatrix[i][j] << ", ";
+        }
+        cout << endl;
+    }
+    return adjMatrix;
+}
 
 int main(int argc, char *argv[])
 {
@@ -60,10 +72,11 @@ int main(int argc, char *argv[])
         //cout << "Aresta: " << vertA[i] << "," << vertB[i] << endl;
     }
     cout << "File read!" << endl << "\n";
-
-    adj_list_t adjList = listAdj(nVert, vertA, vertB);
-
     inputFile.close();
+
+    matrix_t adjList = listAdj(nVert, vertA, vertB);
+    matrix_t  adjMatrix = matrixAdj(nVert, vertA, vertB);
+
 
     return 0;
 }
