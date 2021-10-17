@@ -18,6 +18,8 @@ void printMatrix(matrix_t matrix){
         }
         cout << endl;
     }
+
+    cout << endl;
 }
 
 matrix_t listAdj(int size, vector<int> vert0, vector<int> vert1)
