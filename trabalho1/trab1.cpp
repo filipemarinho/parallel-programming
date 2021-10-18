@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-typedef std::vector<std::vector<int>> matrix_t; 
+typedef std::vector<std::vector<int>> matrix_t;
 
 using namespace std;
 
@@ -16,6 +16,9 @@ matrix_t listAdj(int size, vector<int> vert0, vector<int> vert1);
 
 //Return the adj matrix of a graph based on the vertex list
 matrix_t matrixAdj(int size, vector<int> vert0, vector<int> vert1);
+
+//Return the graph degree for each node
+vector<int> graphDegree(matrix_t matrix);
 
 int main(int argc, char *argv[])
 {
@@ -42,15 +45,16 @@ int main(int argc, char *argv[])
         inputFile >> vertA[i] >> vertB[i];
         //cout << "Aresta: " << vertA[i] << "," << vertB[i] << endl;
     }
-    cout << "File read!" << endl << "\n";
+    cout << "File read!" << endl
+         << "\n";
     inputFile.close();
 
     //sorting the initial edges list would optmize caching in element acess
 
     matrix_t adjList = listAdj(nVert, vertA, vertB);
     matrix_t adjMatrix = matrixAdj(nVert, vertA, vertB);
-
-
+    vector<int> degrees =  graphDegree(adjList);
+    cout << "aaaaaaaaaaaaaaaaaaa" << endl;
     return 0;
 }
 
@@ -70,7 +74,7 @@ matrix_t listAdj(int size, vector<int> vert0, vector<int> vert1)
     return adjList;
 }
 
-matrix_t matrixAdj(int size, vector<int> vert0, vector<int> vert1) 
+matrix_t matrixAdj(int size, vector<int> vert0, vector<int> vert1)
 {
     matrix_t adjMatrix(size, vector<int>(size, 0));
 
@@ -86,7 +90,21 @@ matrix_t matrixAdj(int size, vector<int> vert0, vector<int> vert1)
     return adjMatrix;
 }
 
-void printMatrix(matrix_t matrix){
+vector<int> graphDegree(matrix_t matrix){
+
+    vector<int> nodesDegree(matrix.size());
+
+    cout << "Graph Degree" << endl;
+    for (auto i = 0; i < matrix.size(); i++){
+        cout << "Degree of " << i << ": " << matrix[i].size() << endl;
+        nodesDegree.push_back(matrix[i].size());
+    }
+
+    return nodesDegree;
+}
+
+void printMatrix(matrix_t matrix)
+{
     for (auto i = 0; i < matrix.size(); i++)
     {
         cout << "Matrix line " << i << endl;
