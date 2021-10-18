@@ -20,6 +20,9 @@ matrix_t matrixAdj(int size, vector<int> vert0, vector<int> vert1);
 //Return the graph degree for each node
 vector<int> graphDegree(matrix_t matrix);
 
+//Return the graph rich club coefficient for a degree k 
+int graphRCCoef(matrix_t matrix, int k);
+
 int main(int argc, char *argv[])
 {
     string filename = argv[1];
@@ -53,8 +56,13 @@ int main(int argc, char *argv[])
 
     matrix_t adjList = listAdj(nVert, vertA, vertB);
     matrix_t adjMatrix = matrixAdj(nVert, vertA, vertB);
+
     vector<int> degrees =  graphDegree(adjList);
-    cout << "aaaaaaaaaaaaaaaaaaa" << endl;
+
+    int coef1 = graphRCCoef(adjList, 1);
+    int coef2 = graphRCCoef(adjList, 2);
+    int coef3 = graphRCCoef(adjList, 3);
+
     return 0;
 }
 
@@ -92,15 +100,47 @@ matrix_t matrixAdj(int size, vector<int> vert0, vector<int> vert1)
 
 vector<int> graphDegree(matrix_t matrix){
 
-    vector<int> nodesDegree(matrix.size());
+    vector<int> nodesDegree(matrix.size(), 0);
 
     cout << "Graph Degree" << endl;
     for (auto i = 0; i < matrix.size(); i++){
         cout << "Degree of " << i << ": " << matrix[i].size() << endl;
-        nodesDegree.push_back(matrix[i].size());
+        nodesDegree[i] = matrix[i].size();
     }
 
     return nodesDegree;
+}
+
+int graphRCCoef(matrix_t matrix, int k){
+
+    vector<int> degrees = graphDegree(matrix);
+
+    int n_k = 0;
+    cout << "Graph Rich Club Coefficient for k = " << k << ", n_k = ";
+
+    //Guarda o conjunto de arestas conectadas ao nó que pertence a R(k)
+    vector<int> E_k;
+
+    for(int i = 0; i < degrees.size(); i++ ){
+        if (degrees[i]>=k) {
+            ++n_k;
+            E_k.insert(E_k.end(), matrix[i].begin(), matrix[i].end());
+
+        }
+    }
+    cout << n_k << ", E_k size = " << E_k.size() <<  endl;
+
+    int coef = 0;
+
+    if (n_k <= 1) {
+        cout << ", coef = 1" << endl;
+        return 1;
+    }
+
+
+
+    coef *= (1/(n_k*(n_k-1)));
+    return coef;
 }
 
 void printMatrix(matrix_t matrix)
