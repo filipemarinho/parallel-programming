@@ -32,9 +32,9 @@ void graphRichness(matrix_t adjList){
 
     vector<int> nodesDegree(adjList.size(), 0);
 
-    cout << "Graph Degree" << endl;
+    //cout << "Graph Degree" << endl;
     for (auto i = 0; i < adjList.size(); i++){
-        cout << "Degree of " << i << ": " << adjList[i].size() << endl;
+        //cout << "Degree of " << i << ": " << adjList[i].size() << endl;
         nodesDegree[i] = adjList[i].size();
     }
 
@@ -96,8 +96,8 @@ matrix_t listAdj(int size, vector<int> vert0, vector<int> vert1)
         adjList[vert1[i]].push_back(vert0[i]);
     }
 
-    cout << "List Adj Result" << endl;
-    printMatrix(adjList);
+    //cout << "List Adj Result" << endl;
+    //printMatrix(adjList);
     return adjList;
 }
 
