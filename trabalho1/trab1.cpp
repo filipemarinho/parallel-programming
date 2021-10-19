@@ -5,6 +5,7 @@
 #include <string>
 // #include <iterator>
 #include <algorithm>
+#include <iomanip>
 
 typedef std::vector<std::vector<int>> matrix_t;
 
@@ -131,6 +132,7 @@ vector<int> graphDegree(matrix_t matrix){
 }
 
 int graphRCCoef(matrix_t adjList){
+    cout << std::setprecision(5) << std::fixed;
 
     vector<int> degrees = graphDegree(adjList);
     for (int k = 0; k< *max_element(degrees.begin(), degrees.end()); k++){
