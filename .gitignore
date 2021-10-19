@@ -1,6 +1,7 @@
 #Test files
-/rich-club-tests
-
+/rich-club-tests*
+rich-club-tests.tar.gz
+rich-club-tests/
 #Vscode
 *.vscode
 
