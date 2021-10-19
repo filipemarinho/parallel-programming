@@ -3,6 +3,8 @@
 #include <fstream>
 #include <vector>
 #include <string>
+// #include <iterator>
+#include <algorithm>
 
 typedef std::vector<std::vector<int>> matrix_t;
 
@@ -10,6 +12,9 @@ using namespace std;
 
 //Print Matrix to cout
 void printMatrix(matrix_t matrix);
+
+//Return true if the vector has the element
+bool hasElement(vector<int> v, int element);
 
 //Return the adj list of a graph based on the vertex list
 matrix_t listAdj(int size, vector<int> vert0, vector<int> vert1);
@@ -22,6 +27,21 @@ vector<int> graphDegree(matrix_t matrix);
 
 //Return the graph rich club coefficient for a degree k 
 int graphRCCoef(matrix_t matrix, int k);
+
+void graphRichness(matrix_t adjList){
+
+    vector<int> nodesDegree(adjList.size(), 0);
+
+    cout << "Graph Degree" << endl;
+    for (auto i = 0; i < adjList.size(); i++){
+        cout << "Degree of " << i << ": " << adjList[i].size() << endl;
+        nodesDegree[i] = adjList[i].size();
+    }
+
+    vector<int> R_k;
+
+    return;
+}
 
 int main(int argc, char *argv[])
 {
@@ -40,13 +60,13 @@ int main(int argc, char *argv[])
     inputFile >> nVert >> nArestas;
     cout << "Reading graph with " << nVert << " vertices and " << nArestas << " arestas." << endl;
 
-    vector<int> vertA(nVert);
-    vector<int> vertB(nVert);
+    vector<int> vertA(nArestas);
+    vector<int> vertB(nArestas);
 
-    for (int i = 0; i < nVert; i++)
+    for (int i = 0; i < nArestas; i++)
     { //usar int i = 0; i < vect.size(); i++ se quiser ter certeza que o elemento está no vetor
         inputFile >> vertA[i] >> vertB[i];
-        //cout << "Aresta: " << vertA[i] << "," << vertB[i] << endl;
+        cout << "Aresta: " << vertA[i] << "," << vertB[i] << endl;
     }
     cout << "File read!" << endl
          << "\n";
@@ -102,45 +122,57 @@ vector<int> graphDegree(matrix_t matrix){
 
     vector<int> nodesDegree(matrix.size(), 0);
 
-    cout << "Graph Degree" << endl;
+    // cout << "Graph Degree" << endl;
     for (auto i = 0; i < matrix.size(); i++){
-        cout << "Degree of " << i << ": " << matrix[i].size() << endl;
+        // cout << "Degree of " << i << ": " << matrix[i].size() << endl;
         nodesDegree[i] = matrix[i].size();
     }
 
     return nodesDegree;
 }
 
-int graphRCCoef(matrix_t matrix, int k){
+int graphRCCoef(matrix_t adjList, int k){
 
-    vector<int> degrees = graphDegree(matrix);
-
-    int n_k = 0;
-    cout << "Graph Rich Club Coefficient for k = " << k << ", n_k = ";
+    vector<int> degrees = graphDegree(adjList);
 
     //Guarda o conjunto de arestas conectadas ao nó que pertence a R(k)
-    vector<int> E_k;
+    vector<int> R_k;
 
     for(int i = 0; i < degrees.size(); i++ ){
-        if (degrees[i]>=k) {
-            ++n_k;
-            E_k.insert(E_k.end(), matrix[i].begin(), matrix[i].end());
-
+        if (degrees[i]>k) {
+            R_k.push_back(i);
         }
     }
-    cout << n_k << ", E_k size = " << E_k.size() <<  endl;
 
-    int coef = 0;
+    int nk =  R_k.size();
+    if (nk <= 1) return 1; //return rk = 1
 
-    if (n_k <= 1) {
-        cout << ", coef = 1" << endl;
-        return 1;
+    cout << "Graph Rich Club Coefficient for k = " << k << ", n_k = " << nk << endl 
+        << "R_k = " << endl;
+
+    float rk = 0.;
+
+    for (auto i = 0; i < R_k.size(); i++){
+        cout << R_k[i] << ", ";
+        for (auto j = 0; j < R_k.size(); j++){
+        if (i != j && hasElement(adjList[R_k[i]], j)) ++rk;
+        }
     }
+    cout << endl << rk << endl;
 
+    rk /= (nk*(nk-1.));
+    cout << "r(" << k <<") = " << rk << endl<< endl;
+    return rk;
+}
 
-
-    coef *= (1/(n_k*(n_k-1)));
-    return coef;
+bool hasElement(vector<int> v, int element){
+    bool hasFound = false;
+    if(std::find(v.begin(), v.end(), element) != v.end())
+    {
+        //element exists in the vector
+        hasFound = true;
+    } 
+    return hasFound;
 }
 
 void printMatrix(matrix_t matrix)
