@@ -26,7 +26,7 @@ matrix_t matrixAdj(int size, vector<int> vert0, vector<int> vert1);
 vector<int> graphDegree(matrix_t matrix);
 
 //Return the graph rich club coefficient for a degree k 
-int graphRCCoef(matrix_t matrix, int k);
+int graphRCCoef(matrix_t matrix);
 
 void graphRichness(matrix_t adjList){
 
@@ -63,8 +63,9 @@ int main(int argc, char *argv[])
     vector<int> vertA(nArestas);
     vector<int> vertB(nArestas);
 
+    //Lê todas as arestas do arquivo
     for (int i = 0; i < nArestas; i++)
-    { //usar int i = 0; i < vect.size(); i++ se quiser ter certeza que o elemento está no vetor
+    {
         inputFile >> vertA[i] >> vertB[i];
         cout << "Aresta: " << vertA[i] << "," << vertB[i] << endl;
     }
@@ -79,9 +80,7 @@ int main(int argc, char *argv[])
 
     vector<int> degrees =  graphDegree(adjList);
 
-    int coef1 = graphRCCoef(adjList, 1);
-    int coef2 = graphRCCoef(adjList, 2);
-    int coef3 = graphRCCoef(adjList, 3);
+    int coef0 = graphRCCoef(adjList);
 
     return 0;
 }
@@ -122,19 +121,20 @@ vector<int> graphDegree(matrix_t matrix){
 
     vector<int> nodesDegree(matrix.size(), 0);
 
-    // cout << "Graph Degree" << endl;
+    cout << "Graph Degree" << endl;
     for (auto i = 0; i < matrix.size(); i++){
-        // cout << "Degree of " << i << ": " << matrix[i].size() << endl;
+        cout << "Degree of " << i << ": " << matrix[i].size() << endl;
         nodesDegree[i] = matrix[i].size();
     }
 
     return nodesDegree;
 }
 
-int graphRCCoef(matrix_t adjList, int k){
+int graphRCCoef(matrix_t adjList){
 
     vector<int> degrees = graphDegree(adjList);
-
+    for (int k = 0; k< *max_element(degrees.begin(), degrees.end()); k++){
+    cout << "k = " << k << endl;
     //Guarda o conjunto de arestas conectadas ao nó que pertence a R(k)
     vector<int> R_k;
 
@@ -145,7 +145,6 @@ int graphRCCoef(matrix_t adjList, int k){
     }
 
     int nk =  R_k.size();
-    if (nk <= 1) return 1; //return rk = 1
 
     cout << "Graph Rich Club Coefficient for k = " << k << ", n_k = " << nk << endl 
         << "R_k = " << endl;
@@ -161,8 +160,11 @@ int graphRCCoef(matrix_t adjList, int k){
     cout << endl << rk << endl;
 
     rk /= (nk*(nk-1.));
+    if (nk <= 1) rk = 1; //return rk = 1
     cout << "r(" << k <<") = " << rk << endl<< endl;
-    return rk;
+    
+    }
+    return 0;
 }
 
 bool hasElement(vector<int> v, int element){
