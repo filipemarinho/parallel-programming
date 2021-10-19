@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
     for (int i = 0; i < nArestas; i++)
     {
         inputFile >> vertA[i] >> vertB[i];
-        cout << "Aresta: " << vertA[i] << "," << vertB[i] << endl;
+        // cout << "Aresta: " << vertA[i] << "," << vertB[i] << endl;
     }
     cout << "File read!" << endl
          << "\n";
@@ -111,8 +111,8 @@ matrix_t matrixAdj(int size, vector<int> vert0, vector<int> vert1)
         adjMatrix[vert1[i]][vert0[i]] = 1;
     }
 
-    cout << "Matrix Adj Result" << endl;
-    printMatrix(adjMatrix);
+    // cout << "Matrix Adj Result" << endl;
+    // printMatrix(adjMatrix);
 
     return adjMatrix;
 }
@@ -121,9 +121,9 @@ vector<int> graphDegree(matrix_t matrix){
 
     vector<int> nodesDegree(matrix.size(), 0);
 
-    cout << "Graph Degree" << endl;
+    // cout << "Graph Degree" << endl;
     for (auto i = 0; i < matrix.size(); i++){
-        cout << "Degree of " << i << ": " << matrix[i].size() << endl;
+        // cout << "Degree of " << i << ": " << matrix[i].size() << endl;
         nodesDegree[i] = matrix[i].size();
     }
 
@@ -137,7 +137,6 @@ int graphRCCoef(matrix_t adjList){
     cout << "k = " << k << endl;
     //Guarda o conjunto de arestas conectadas ao nó que pertence a R(k)
     vector<int> R_k;
-
     for(int i = 0; i < degrees.size(); i++ ){
         if (degrees[i]>k) {
             R_k.push_back(i);
@@ -146,22 +145,19 @@ int graphRCCoef(matrix_t adjList){
 
     int nk =  R_k.size();
 
-    cout << "Graph Rich Club Coefficient for k = " << k << ", n_k = " << nk << endl 
-        << "R_k = " << endl;
+    cout << "Graph Rich Club Coefficient for k = " << k << ", n_k = " << nk << endl;
 
     float rk = 0.;
 
     for (auto i = 0; i < R_k.size(); i++){
-        cout << R_k[i] << ", ";
         for (auto j = 0; j < R_k.size(); j++){
-        if (i != j && hasElement(adjList[R_k[i]], j)) ++rk;
+        if (hasElement(adjList[R_k[i]], R_k[j])) rk += 1.;
         }
     }
-    cout << endl << rk << endl;
 
     rk /= (nk*(nk-1.));
-    if (nk <= 1) rk = 1; //return rk = 1
-    cout << "r(" << k <<") = " << rk << endl<< endl;
+    if (nk <= 1) rk = 1;
+    cout << "r(" << k <<") = " << rk << endl;
     
     }
     return 0;
