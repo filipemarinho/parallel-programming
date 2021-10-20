@@ -8,64 +8,72 @@
 #include <iomanip>
 
 typedef std::vector<std::vector<int>> matrix_t;
+enum Error { SUCCESS, BAD_ARGUMENT, BAD_FILE };
 
 using namespace std;
+class Graph{
+    public:
 
-//Print Matrix to cout
-void printMatrix(matrix_t matrix);
+    Graph(string filename);
 
-//Return true if the vector has the element
-bool hasElement(vector<int> v, int element);
+    int nVert, nArestas;
 
-//Return the adj list of a graph based on the vertex list
-matrix_t listAdj(int size, vector<int> vert0, vector<int> vert1);
+    matrix_t adjList;
+    matrix_t edgeList;
 
-//Return the adj matrix of a graph based on the vertex list
-matrix_t matrixAdj(int size, vector<int> vert0, vector<int> vert1);
+    vector<int> vertA, vertB;
 
-//Return the graph degree for each node
-vector<int> graphDegree(matrix_t matrix);
+    //Return the adj list of a graph based on the vertex list
+    matrix_t listAdj();
 
-//Return the graph rich club coefficient for a degree k 
-int graphRCCoef(matrix_t matrix);
+    //Return the adj matrix of a graph based on the vertex list
+    matrix_t matrixAdj(vector<int> vert0, vector<int> vert1);
 
-void graphRichness(matrix_t adjList){
+    //Return the graph degree for each node
+    vector<int> graphDegree(matrix_t matrix);
 
-    vector<int> nodesDegree(adjList.size(), 0);
+    //Return the graph rich club coefficient for a degree k 
+    int graphRCCoef(matrix_t matrix);
 
-    //cout << "Graph Degree" << endl;
-    for (auto i = 0; i < adjList.size(); i++){
-        //cout << "Degree of " << i << ": " << adjList[i].size() << endl;
-        nodesDegree[i] = adjList[i].size();
-    }
+    //Print Matrix to cout
+    void printMatrix(matrix_t matrix);
 
-    vector<int> R_k;
+    //Return true if the vector has the element
+    bool hasElement(vector<int> v, int element);
 
-    return;
-}
+};
 
 int main(int argc, char *argv[])
 {
-    string filename = argv[1];
+    string filename = "graph.net";//argv[1];
+    Graph graph(filename);
+    graph.graphRCCoef(graph.listAdj());
+    
 
-    // Read from the text file
+    // //sorting the initial edges list would optmize caching in element acess
+    return 0;
+}
+
+Graph::Graph(string filename){
+
+    // Open the text file and check extension
     ifstream inputFile(filename);
     if (!inputFile.is_open() || filename.substr(filename.find_last_of(".") + 1) != "net")
     {
         cerr << "Could not open the file, check extension. Filename - '"
              << filename << "'" << endl;
-        return EXIT_FAILURE;
+        exit(BAD_ARGUMENT);
     }
 
-    int nVert, nArestas;
-    inputFile >> nVert >> nArestas;
-    cout << "Reading graph with " << nVert << " vertices and " << nArestas << " arestas." << endl;
+    // Read number of edges and vertex
+    inputFile >> this->nVert >> this->nArestas;
+    // cout << "Reading graph with " << this->nVert << " vertices and " << this->nArestas << " arestas." << endl;
 
-    vector<int> vertA(nArestas);
-    vector<int> vertB(nArestas);
+    vector<int> vertA(this->nArestas);
+    vector<int> vertB(this->nArestas);
 
     //Lê todas as arestas do arquivo
-    for (int i = 0; i < nArestas; i++)
+    for (int i = 0; i < this->nArestas; i++)
     {
         inputFile >> vertA[i] >> vertB[i];
         // cout << "Aresta: " << vertA[i] << "," << vertB[i] << endl;
@@ -74,27 +82,22 @@ int main(int argc, char *argv[])
          << "\n";
     inputFile.close();
 
-    //sorting the initial edges list would optmize caching in element acess
+    this->vertA = vertA;
+    this->vertB = vertB;
 
-    matrix_t adjList = listAdj(nVert, vertA, vertB);
-    matrix_t adjMatrix = matrixAdj(nVert, vertA, vertB);
-
-    vector<int> degrees =  graphDegree(adjList);
-
-    int coef0 = graphRCCoef(adjList);
-
-    return 0;
+    this->adjList = this->listAdj();
+    this->printMatrix(this->adjList);
 }
 
-matrix_t listAdj(int size, vector<int> vert0, vector<int> vert1)
+matrix_t Graph::listAdj()
 {
-    matrix_t adjList(size);
+    matrix_t adjList(this->nVert);
 
-    for (int i = 0; i < vert0.size(); i++)
+    for (int i = 0; i < this->vertA.size(); i++)
     {
-        //cout << "Linha: " << i << ", Aresta: " << vert0[i] << "," << vert1[i] << endl;
-        adjList[vert0[i]].push_back(vert1[i]);
-        adjList[vert1[i]].push_back(vert0[i]);
+        //cout << "Linha: " << i << ", Aresta: " << this->vertA[i] << "," << this->vertB[i] << endl;
+        adjList[this->vertA[i]].push_back(this->vertB[i]);
+        adjList[this->vertB[i]].push_back(this->vertA[i]);
     }
 
     //cout << "List Adj Result" << endl;
@@ -102,9 +105,9 @@ matrix_t listAdj(int size, vector<int> vert0, vector<int> vert1)
     return adjList;
 }
 
-matrix_t matrixAdj(int size, vector<int> vert0, vector<int> vert1)
+matrix_t Graph::matrixAdj(vector<int> vert0, vector<int> vert1)
 {
-    matrix_t adjMatrix(size, vector<int>(size, 0));
+    matrix_t adjMatrix(this->nVert, vector<int>(this->nVert, 0));
 
     for (int i = 0; i < vert0.size(); i++)
     {
@@ -118,7 +121,7 @@ matrix_t matrixAdj(int size, vector<int> vert0, vector<int> vert1)
     return adjMatrix;
 }
 
-vector<int> graphDegree(matrix_t matrix){
+vector<int> Graph::graphDegree(matrix_t matrix){
 
     vector<int> nodesDegree(matrix.size(), 0);
 
@@ -131,10 +134,10 @@ vector<int> graphDegree(matrix_t matrix){
     return nodesDegree;
 }
 
-int graphRCCoef(matrix_t adjList){
+int Graph::graphRCCoef(matrix_t adjList){
     cout << std::setprecision(5) << std::fixed;
 
-    vector<int> degrees = graphDegree(adjList);
+    vector<int> degrees = this->graphDegree(adjList);
     for (int k = 0; k< *max_element(degrees.begin(), degrees.end()); k++){
     cout << "k = " << k << endl;
     //Guarda o conjunto de arestas conectadas ao nó que pertence a R(k)
@@ -153,7 +156,7 @@ int graphRCCoef(matrix_t adjList){
 
     for (auto i = 0; i < R_k.size(); i++){
         for (auto j = 0; j < R_k.size(); j++){
-        if (hasElement(adjList[R_k[i]], R_k[j])) rk += 1.;
+        if (this->hasElement(adjList[R_k[i]], R_k[j])) rk += 1.;
         }
     }
 
@@ -165,7 +168,7 @@ int graphRCCoef(matrix_t adjList){
     return 0;
 }
 
-bool hasElement(vector<int> v, int element){
+bool Graph::hasElement(vector<int> v, int element){
     bool hasFound = false;
     if(std::find(v.begin(), v.end(), element) != v.end())
     {
@@ -175,7 +178,7 @@ bool hasElement(vector<int> v, int element){
     return hasFound;
 }
 
-void printMatrix(matrix_t matrix)
+void Graph::printMatrix(matrix_t matrix)
 {
     for (auto i = 0; i < matrix.size(); i++)
     {
@@ -189,3 +192,4 @@ void printMatrix(matrix_t matrix)
 
     cout << endl;
 }
+
