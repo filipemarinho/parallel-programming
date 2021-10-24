@@ -3,9 +3,9 @@
 #include <fstream>
 #include <vector>
 #include <string>
-// #include <iterator>
 #include <algorithm>
 #include <iomanip>
+#include <time.h>
 
 typedef std::vector<std::vector<int>> matrix_t;
 enum Error { SUCCESS, BAD_ARGUMENT, BAD_FILE };
@@ -20,11 +20,12 @@ class Graph{
 
     matrix_t adjList;
     matrix_t edgeList;
-
+  
     vector<int> vertA, vertB;
 
     //Return the adj list of a graph based on the vertex list
     matrix_t listAdj();
+
 
     //Return the adj matrix of a graph based on the vertex list
     matrix_t matrixAdj(vector<int> vert0, vector<int> vert1);
@@ -65,9 +66,11 @@ Graph::Graph(string filename){
         exit(BAD_ARGUMENT);
     }
 
+
     // Read number of edges and vertex
     inputFile >> this->nVert >> this->nArestas;
     // cout << "Reading graph with " << this->nVert << " vertices and " << this->nArestas << " arestas." << endl;
+
 
     vector<int> vertA(this->nArestas);
     vector<int> vertB(this->nArestas);
@@ -87,6 +90,7 @@ Graph::Graph(string filename){
 
     this->adjList = this->listAdj();
     this->printMatrix(this->adjList);
+
 }
 
 matrix_t Graph::listAdj()
@@ -120,6 +124,7 @@ matrix_t Graph::matrixAdj(vector<int> vert0, vector<int> vert1)
 
     return adjMatrix;
 }
+
 
 vector<int> Graph::graphDegree(matrix_t matrix){
 
