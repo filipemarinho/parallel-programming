@@ -5,7 +5,7 @@
 #include <string>
 #include <algorithm>
 #include <iomanip>
-#include <time.h>
+#include <chrono>
 
 typedef std::vector<std::vector<int>> matrix_t;
 enum Error { SUCCESS, BAD_ARGUMENT, BAD_FILE };
@@ -78,16 +78,15 @@ int main(int argc, char *argv[])
 
     g1.read(filename);
 
-    time_t start,end;
-    time (&start);
+    auto t1 = std::chrono::high_resolution_clock::now();
 
     g1.getAdjList();
     g1.getGraphDegree();
     g1.getRichClubCoef();
 
-    time (&end);
-    double dif = difftime (end,start);
-    cout << "Elasped time " << dif << " seconds."  << endl;
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto dif = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
+    cout << "Elasped time " << dif << " miliseconds."  << endl;
 
     return 0;
 }
