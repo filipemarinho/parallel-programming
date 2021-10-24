@@ -151,8 +151,8 @@ int graphRCCoef(matrix_t adjList){
 
     float rk = 0.;
 
-    for (auto i = 0; i < R_k.size(); i++){
-        for (auto j = 0; j < R_k.size(); j++){
+    for (int i = 0; i < R_k.size(); i++){
+        for (int j = 0; j < R_k.size(); j++){
         if (hasElement(adjList[R_k[i]], R_k[j])) rk += 1.;
         }
     }
