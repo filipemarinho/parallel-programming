@@ -3,9 +3,9 @@
 #include <fstream>
 #include <vector>
 #include <string>
-// #include <iterator>
 #include <algorithm>
 #include <iomanip>
+#include <time.h>
 
 typedef std::vector<std::vector<int>> matrix_t;
 
@@ -20,29 +20,11 @@ bool hasElement(vector<int> v, int element);
 //Return the adj list of a graph based on the vertex list
 matrix_t listAdj(int size, vector<int> vert0, vector<int> vert1);
 
-//Return the adj matrix of a graph based on the vertex list
-matrix_t matrixAdj(int size, vector<int> vert0, vector<int> vert1);
-
 //Return the graph degree for each node
 vector<int> graphDegree(matrix_t matrix);
 
 //Return the graph rich club coefficient for a degree k 
 int graphRCCoef(matrix_t matrix);
-
-void graphRichness(matrix_t adjList){
-
-    vector<int> nodesDegree(adjList.size(), 0);
-
-    //cout << "Graph Degree" << endl;
-    for (auto i = 0; i < adjList.size(); i++){
-        //cout << "Degree of " << i << ": " << adjList[i].size() << endl;
-        nodesDegree[i] = adjList[i].size();
-    }
-
-    vector<int> R_k;
-
-    return;
-}
 
 int main(int argc, char *argv[])
 {
@@ -56,6 +38,7 @@ int main(int argc, char *argv[])
              << filename << "'" << endl;
         return EXIT_FAILURE;
     }
+
 
     int nVert, nArestas;
     inputFile >> nVert >> nArestas;
@@ -74,14 +57,20 @@ int main(int argc, char *argv[])
          << "\n";
     inputFile.close();
 
+    time_t start,end;
+    time (&start);
+
     //sorting the initial edges list would optmize caching in element acess
 
     matrix_t adjList = listAdj(nVert, vertA, vertB);
-    matrix_t adjMatrix = matrixAdj(nVert, vertA, vertB);
 
     vector<int> degrees =  graphDegree(adjList);
 
     int coef0 = graphRCCoef(adjList);
+
+    time (&end);
+    double dif = difftime (end,start);
+    cout << "Elasped time " << dif << " seconds."  << endl;
 
     return 0;
 }
@@ -102,21 +91,6 @@ matrix_t listAdj(int size, vector<int> vert0, vector<int> vert1)
     return adjList;
 }
 
-matrix_t matrixAdj(int size, vector<int> vert0, vector<int> vert1)
-{
-    matrix_t adjMatrix(size, vector<int>(size, 0));
-
-    for (int i = 0; i < vert0.size(); i++)
-    {
-        adjMatrix[vert0[i]][vert1[i]] = 1;
-        adjMatrix[vert1[i]][vert0[i]] = 1;
-    }
-
-    // cout << "Matrix Adj Result" << endl;
-    // printMatrix(adjMatrix);
-
-    return adjMatrix;
-}
 
 vector<int> graphDegree(matrix_t matrix){
 
