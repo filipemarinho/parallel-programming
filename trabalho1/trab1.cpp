@@ -17,6 +17,7 @@ class Graph {
     vector<int> vertA, vertB;
     matrix_t adjList;
     vector<int> degrees;
+    int maxDegree = 0;
 
     //Return the adj list of a graph based on the vertex list
     void getAdjList();
@@ -61,8 +62,7 @@ void Graph::read(string filename){
         inputFile >> this->vertA[i] >> this->vertB[i];
         // cout << "Aresta: " << this->vertA[i] << "," << this->vertB[i] << endl;
     }
-    cout << "File read!" << endl
-         << "\n";
+    cout << "File read!" << endl << endl;
     inputFile.close();
 
     return;
@@ -103,7 +103,7 @@ void Graph::getAdjList()
     }   
     this->adjList = adjList_;
     // cout << "List Adj Result" << endl;
-    this->printMatrix(this->adjList);
+    // this->printMatrix(this->adjList);
     return;
 }
 
@@ -116,6 +116,7 @@ void Graph::getGraphDegree(){
     for (auto i = 0; i < this->adjList.size(); i++){
         // cout << "Degree of " << i << ": " << this->adjList[i].size() << endl;
         degrees[i] = this->adjList[i].size();
+        if (degrees[i] > this->maxDegree) this->maxDegree = degrees[i];
     }
 
     return;
@@ -123,7 +124,7 @@ void Graph::getGraphDegree(){
 
 void Graph::getRichClubCoef(){
     
-    for (int k = 0; k< *max_element(this->degrees.begin(), this->degrees.end()); k++){
+    for (int k = 0; k< this->maxDegree; k++){
     // cout << "k = " << k << endl;
     //Guarda o conjunto de arestas conectadas ao nó que pertence a R(k)
     vector<int> R_k;
