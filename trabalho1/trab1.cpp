@@ -18,6 +18,7 @@ class Graph {
     matrix_t adjList;
     vector<int> degrees;
     int maxDegree = 0;
+    vector<int> rks;
 
     //Return the adj list of a graph based on the vertex list
     void getAdjList();
@@ -149,7 +150,7 @@ void Graph::getRichClubCoef(){
     rk /= (nk*(nk-1.));
     if (nk <= 1) rk = 1;
     cout << "r(" << k <<") = " << rk << endl;
-    
+    this->rks.push_back(rk);
     }
     return ;
 }
