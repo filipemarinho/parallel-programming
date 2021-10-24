@@ -57,16 +57,21 @@ void Graph::read(string filename){
     inputFile >> this->nVertex >> this->nEdges;
     cout << "Reading graph with " << this->nVertex << " vertices and " << this->nEdges << " arestas." << endl;
 
-    this->vertA.resize(this->nEdges, 0);
-    this->vertB.resize(this->nEdges,0);
+    // this->vertA.resize(this->nEdges, 0);
+    // this->vertB.resize(this->nEdges,0);
+    this->vertA.reserve(this->nEdges);
+    this->vertB.reserve(this->nEdges);
 
     //Lê todas as arestas do arquivo
     for (int i = 0; i < this->nEdges; i++)
-    {
-        inputFile >> this->vertA[i] >> this->vertB[i];
+    {   
+        int tempA = 0, tempB = 0;
+        // inputFile >> this->vertA[i] >> this->vertB[i];
+        inputFile >> tempA >> tempB;
+        this->vertA.push_back(tempA);
+        this->vertB.push_back(tempB);
         // cout << "Aresta: " << this->vertA[i] << "," << this->vertB[i] << endl;
     }
-    cout << "File read!" << endl << endl;
     inputFile.close();
 
     return;
@@ -99,7 +104,6 @@ int main(int argc, char *argv[])
 
     //Compare results
     string expectedFilename = "rich-club-tests/expected-" + id + "rcb";
-    cout << id << " " << expectedFilename <<  endl;
     ifstream resultFile(expectedFilename);
     if (!resultFile.is_open())
     {
