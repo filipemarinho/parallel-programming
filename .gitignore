@@ -4,7 +4,7 @@ rich-club-tests.tar.gz
 rich-club-tests/
 #Vscode
 *.vscode
-
+*.rcb
 # Prerequisites
 *.d
 

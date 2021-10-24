@@ -8,7 +8,7 @@
 #include <chrono>
 
 typedef std::vector<std::vector<int>> matrix_t;
-enum Error { SUCCESS, BAD_ARGUMENT, BAD_FILE };
+enum Error {SUCCESS, BAD_ARGUMENT, BAD_FILE, BAD_RESULT};
 using namespace std;    
 class Graph {
     public:
@@ -18,7 +18,7 @@ class Graph {
     matrix_t adjList;
     vector<int> degrees;
     int maxDegree = 0;
-    vector<int> rks;
+    vector<float> rks;
 
     //Return the adj list of a graph based on the vertex list
     void getAdjList();
@@ -34,6 +34,9 @@ class Graph {
 
     //Print Matrix to cout
     void printMatrix(matrix_t matrix);
+
+    // Print the results
+    void printResult(string filenameOutput);
 
     //Return true if the vector has the element
     bool hasElement(vector<int> v, int element);
@@ -72,8 +75,9 @@ void Graph::read(string filename){
 
 int main(int argc, char *argv[])
 {
+    string name = argv[1];
     cout << std::setprecision(5) << std::fixed;
-    string filename = argv[1];
+    string filename = "rich-club-tests/" + name;
 
     Graph g1;
 
@@ -89,6 +93,30 @@ int main(int argc, char *argv[])
     auto dif = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
     cout << "Elasped time " << dif << " miliseconds."  << endl;
 
+    string id = name;
+    id.resize(id.size() - 3); //remove extension
+    g1.printResult(id);
+
+    //Compare results
+    string expectedFilename = "rich-club-tests/expected-" + id + "rcb";
+    cout << id << " " << expectedFilename <<  endl;
+    ifstream resultFile(expectedFilename);
+    if (!resultFile.is_open())
+    {
+        cerr << "Could not open the results file" << endl;
+        exit(BAD_ARGUMENT);
+    }
+
+    float expected = -1.;
+    int i = 0;
+    while (resultFile >> expected) {
+        if (abs(expected - g1.rks[i]) > .00001) {
+            cerr << "Bad Result! r(" << i << ") =" << g1.rks[i] << " expected " << expected << endl;
+            exit(BAD_RESULT);
+            }
+        i++;
+    }
+    cout << "Sucess" << endl;
     return 0;
 }
 
@@ -149,7 +177,7 @@ void Graph::getRichClubCoef(){
 
     rk /= (nk*(nk-1.));
     if (nk <= 1) rk = 1;
-    cout << "r(" << k <<") = " << rk << endl;
+    // cout << "r(" << k <<") = " << rk << endl;
     this->rks.push_back(rk);
     }
     return ;
@@ -178,4 +206,25 @@ void Graph::printMatrix(matrix_t matrix)
     }
 
     cout << endl;
+}
+
+void Graph::printResult(string filenameOutput ){
+    //Compare results
+    // ofstream outputFile(filenameOutput); //TO DO:
+    filenameOutput +=+ "rcb";
+
+    ofstream outputFile("result.rcb", ios::trunc);
+    if (!outputFile.is_open())
+    {
+        cerr << "Could not open the output file" << endl;
+        exit(BAD_ARGUMENT);
+    }
+
+    outputFile << fixed << setprecision(5);
+
+    for(int i = 0; i<this->rks.size(); i++){
+        outputFile << rks[i] << endl;
+    }
+    outputFile.close();
+    return; 
 }
