@@ -68,8 +68,8 @@ void Graph::read(string filename){
         int tempA = 0, tempB = 0;
         // inputFile >> this->vertA[i] >> this->vertB[i];
         inputFile >> tempA >> tempB;
-        this->vertA.push_back(tempA);
-        this->vertB.push_back(tempB);
+        this->vertA.emplace_back(tempA);
+        this->vertB.emplace_back(tempB);
         // cout << "Aresta: " << this->vertA[i] << "," << this->vertB[i] << endl;
     }
     inputFile.close();
@@ -131,8 +131,8 @@ void Graph::getAdjList()
     for (int i = 0; i < this->vertA.size(); i++)
     {
         // cout << "Linha: " << i << ", Aresta: " << this->vertA[i] << "," << this->vertB[i] << endl;
-        adjList_[this->vertA[i]].push_back(this->vertB[i]);
-        adjList_[this->vertB[i]].push_back(this->vertA[i]);
+        adjList_[this->vertA[i]].emplace_back(this->vertB[i]);
+        adjList_[this->vertB[i]].emplace_back(this->vertA[i]);
     }   
     this->adjList = adjList_;
     // cout << "List Adj Result" << endl;
@@ -163,7 +163,7 @@ void Graph::getRichClubCoef(){
     vector<int> R_k;
     for(int i = 0; i < this->degrees.size(); i++ ){
         if (this->degrees[i]>k) {
-            R_k.push_back(i);
+            R_k.emplace_back(i);
         }
     }
 
@@ -182,7 +182,7 @@ void Graph::getRichClubCoef(){
     rk /= (nk*(nk-1.));
     if (nk <= 1) rk = 1;
     // cout << "r(" << k <<") = " << rk << endl;
-    this->rks.push_back(rk);
+    this->rks.emplace_back(rk);
     }
     return ;
 }
