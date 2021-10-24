@@ -8,11 +8,17 @@
 #include <chrono>
 
 typedef std::vector<std::vector<int>> matrix_t;
-enum Error {SUCCESS, BAD_ARGUMENT, BAD_FILE, BAD_RESULT};
-using namespace std;    
-class Graph {
-    public:
-    
+enum Error
+{
+    SUCCESS,
+    BAD_ARGUMENT,
+    BAD_FILE,
+    BAD_RESULT
+};
+using namespace std;
+class Graph
+{
+public:
     int nVertex, nEdges;
     vector<int> vertA, vertB;
     matrix_t adjList;
@@ -29,7 +35,7 @@ class Graph {
     //Return the graph degree for each node
     void getGraphDegree();
 
-    //Return the graph rich club coefficient for a degree k 
+    //Return the graph rich club coefficient for a degree k
     void getRichClubCoef();
 
     //Print Matrix to cout
@@ -42,10 +48,9 @@ class Graph {
     bool hasElement(vector<int> v, int element);
 };
 
-
-
-void Graph::read(string filename){
-        // Read from the text file
+void Graph::read(string filename)
+{
+    // Read from the text file
     ifstream inputFile(filename);
     if (!inputFile.is_open() || filename.substr(filename.find_last_of(".") + 1) != "net")
     {
@@ -64,7 +69,7 @@ void Graph::read(string filename){
 
     //Lê todas as arestas do arquivo
     for (int i = 0; i < this->nEdges; i++)
-    {   
+    {
         int tempA = 0, tempB = 0;
         // inputFile >> this->vertA[i] >> this->vertB[i];
         inputFile >> tempA >> tempB;
@@ -76,7 +81,6 @@ void Graph::read(string filename){
 
     return;
 }
-
 
 int main(int argc, char *argv[])
 {
@@ -95,8 +99,8 @@ int main(int argc, char *argv[])
     g1.getRichClubCoef();
 
     auto t2 = std::chrono::high_resolution_clock::now();
-    auto dif = std::chrono::duration_cast<std::chrono::milliseconds>(t2-t1).count();
-    cout << "Elasped time " << dif << " miliseconds."  << endl;
+    auto dif = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+    cout << "Elasped time " << dif << " miliseconds." << endl;
 
     string id = name;
     id.resize(id.size() - 3); //remove extension
@@ -113,88 +117,102 @@ int main(int argc, char *argv[])
 
     float expected = -1.;
     int i = 0;
-    while (resultFile >> expected) {
-        if (abs(expected - g1.rks[i]) > .00001) {
+    while (resultFile >> expected)
+    {
+        if (abs(expected - g1.rks[i]) > .00001)
+        {
             cerr << "Bad Result! r(" << i << ") =" << g1.rks[i] << " expected " << expected << endl;
             exit(BAD_RESULT);
-            }
+        }
         i++;
     }
     cout << "Sucess" << endl;
     return 0;
 }
 
-
 void Graph::getAdjList()
 {
     matrix_t adjList_(this->nEdges);
-    for (int i = 0; i < this->vertA.size(); i++)
+    for (size_t i = 0; i < this->vertA.size(); i++)
     {
         // cout << "Linha: " << i << ", Aresta: " << this->vertA[i] << "," << this->vertB[i] << endl;
         adjList_[this->vertA[i]].emplace_back(this->vertB[i]);
         adjList_[this->vertB[i]].emplace_back(this->vertA[i]);
-    }   
+    }
     this->adjList = adjList_;
     // cout << "List Adj Result" << endl;
     // this->printMatrix(this->adjList);
     return;
 }
 
-
-void Graph::getGraphDegree(){
+void Graph::getGraphDegree()
+{
 
     degrees.resize(this->adjList.size(), 0);
 
     // cout << "Graph Degree" << endl;
-    for (auto i = 0; i < this->adjList.size(); i++){
+    for (auto i = 0; i < this->adjList.size(); i++)
+    {
         // cout << "Degree of " << i << ": " << this->adjList[i].size() << endl;
         degrees[i] = this->adjList[i].size();
-        if (degrees[i] > this->maxDegree) this->maxDegree = degrees[i];
+        if (degrees[i] > this->maxDegree)
+            this->maxDegree = degrees[i];
     }
 
     return;
 }
 
-void Graph::getRichClubCoef(){
-    
-    for (int k = 0; k< this->maxDegree; k++){
-    // cout << "k = " << k << endl;
-    //Guarda o conjunto de arestas conectadas ao nó que pertence a R(k)
-    vector<int> R_k;
-    for(int i = 0; i < this->degrees.size(); i++ ){
-        if (this->degrees[i]>k) {
-            R_k.emplace_back(i);
+void Graph::getRichClubCoef()
+{
+
+    for (int k = 0; k < this->maxDegree; k++)
+    {
+        // cout << "k = " << k << endl;
+        //Guarda o conjunto de arestas conectadas ao nó que pertence a R(k)
+        vector<int> R_k;
+        for (size_t i = 0; i < this->degrees.size(); i++)
+        {
+            if (this->degrees[i] > k)
+            {
+                R_k.emplace_back(i);
+            }
         }
-    }
 
-    int nk =  R_k.size();
+        int nk = R_k.size();
 
-    // cout << "Graph Rich Club Coefficient for k = " << k << ", n_k = " << nk << endl;
+        float rk = 0.;
 
-    float rk = 0.;
+        if (nk >= 1)
+        {
+            // cout << "Graph Rich Club Coefficient for k = " << k << ", n_k = " << nk << endl;
 
-    for (int i = 0; i < R_k.size(); i++){
-        for (int j = 0; j < R_k.size(); j++){
-        if (hasElement(adjList[R_k[i]], R_k[j])) rk += 1.;
+            for (size_t i = 0; i < R_k.size(); i++)
+            {
+                for (size_t j = 0; j < R_k.size(); j++)
+                {
+                    // Inicialmente havia um método hasElement para encapsular essa função, 
+                    //mas por ser chamada muitas vezes percebi que só a chamada do método impactava consideravelmente a execução
+                    if (std::binary_search(adjList[R_k[i]].begin(), adjList[R_k[i]].end(), R_k[j]))
+                        rk = rk + 1.;
+                }
+            }
+
+            rk /= (nk * (nk - 1.));
         }
-    }
+        else
+        {
+            rk = 1;
+        }
 
-    rk /= (nk*(nk-1.));
-    if (nk <= 1) rk = 1;
-    // cout << "r(" << k <<") = " << rk << endl;
-    this->rks.emplace_back(rk);
+        // cout << "r(" << k <<") = " << rk << endl;
+        this->rks.emplace_back(rk);
     }
-    return ;
+    return;
 }
 
-bool Graph::hasElement(vector<int> v, int element){
-    bool hasFound = false;
-    if(std::find(v.begin(), v.end(), element) != v.end())
-    {
-        //element exists in the vector
-        hasFound = true;
-    } 
-    return hasFound;
+bool Graph::hasElement(vector<int> v, int element)
+{
+    return std::binary_search(v.begin(), v.end(), element);
 }
 
 void Graph::printMatrix(matrix_t matrix)
@@ -202,7 +220,7 @@ void Graph::printMatrix(matrix_t matrix)
     for (auto i = 0; i < matrix.size(); i++)
     {
         cout << "Matrix line " << i << endl;
-        for (int j = 0; j < matrix[i].size(); j++)
+        for (size_t j = 0; j < matrix[i].size(); j++)
         {
             cout << matrix[i][j] << ", ";
         }
@@ -212,10 +230,11 @@ void Graph::printMatrix(matrix_t matrix)
     cout << endl;
 }
 
-void Graph::printResult(string filenameOutput ){
+void Graph::printResult(string filenameOutput)
+{
     //Compare results
     // ofstream outputFile(filenameOutput); //TO DO:
-    filenameOutput +=+ "rcb";
+    filenameOutput += +"rcb";
 
     ofstream outputFile("result.rcb", ios::trunc);
     if (!outputFile.is_open())
@@ -226,9 +245,10 @@ void Graph::printResult(string filenameOutput ){
 
     outputFile << fixed << setprecision(5);
 
-    for(int i = 0; i<this->rks.size(); i++){
+    for (size_t i = 0; i < this->rks.size(); i++)
+    {
         outputFile << rks[i] << endl;
     }
     outputFile.close();
-    return; 
+    return;
 }
