@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
             g1.getRichClubCoef();
 
             auto t2 = std::chrono::high_resolution_clock::now();
-            auto dif = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+            auto dif = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
             total +=dif;
             inter+=1;
             cout << "Elasped time " << dif << " miliseconds." << endl;
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
         }
     }
     total/=inter;
-    cout << "Mean time " << total << endl;
+    cout << "Total time " << total << " Mean time " << total/inter << endl;
     return 0;
 }
 
@@ -208,7 +208,8 @@ void Graph::getRichClubCoef()
                 {
                     // Inicialmente havia um método hasElement para encapsular essa função,
                     //mas por ser chamada muitas vezes percebi que só a chamada do método impactava consideravelmente a execução
-                    if (this->hasElement(adjList[R_k[i]], R_k[j]))
+                    // if (this->hasElement(adjList[R_k[i]], R_k[j]))
+                    if(std::find(adjList[R_k[i]].begin(), adjList[R_k[i]].end(), R_k[j]) != adjList[R_k[i]].end())
                         // if (std::binary_search(adjList[R_k[i]].begin(), adjList[R_k[i]].end(), R_k[j]))
                         rk = rk + 1.;
                 }
