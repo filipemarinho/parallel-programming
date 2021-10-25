@@ -84,49 +84,65 @@ void Graph::read(string filename)
 
 int main(int argc, char *argv[])
 {
-    string name = argv[1];
-    cout << std::setprecision(5) << std::fixed;
-    string filename = "rich-club-tests/" + name;
-
-    Graph g1;
-
-    g1.read(filename);
-
-    auto t1 = std::chrono::high_resolution_clock::now();
-
-    g1.getAdjList();
-    g1.getGraphDegree();
-    g1.getRichClubCoef();
-
-    auto t2 = std::chrono::high_resolution_clock::now();
-    auto dif = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-    cout << "Elasped time " << dif << " miliseconds." << endl;
-
-    string id = name;
-    id.resize(id.size() - 3); //remove extension
-    g1.printResult(id);
-
-    //Compare results
-    string expectedFilename = "rich-club-tests/expected-" + id + "rcb";
-    ifstream resultFile(expectedFilename);
-    if (!resultFile.is_open())
+    double total = 0;
+    int inter = 0;
+    // string name = argv[1];rich-club-tests/small-1-001.net
+    vector<string> names = {"small-1-00", "small-2-00", "medium-1-00", "medium-2-00"}; //"large-1-00", "large-2-00", "huge-1-00", "huge-2-00"
+    for (auto _name : names)
     {
-        cerr << "Could not open the results file" << endl;
-        exit(BAD_ARGUMENT);
-    }
-
-    float expected = -1.;
-    int i = 0;
-    while (resultFile >> expected)
-    {
-        if (abs(expected - g1.rks[i]) > .00001)
+        string name;
+        for (int n = 0; n < 10; ++n)
         {
-            cerr << "Bad Result! r(" << i << ") =" << g1.rks[i] << " expected " << expected << endl;
-            exit(BAD_RESULT);
+            name = _name + to_string(n) + ".net";
+
+            cout << std::setprecision(5) << std::fixed << name << endl;
+            string filename = "rich-club-tests/" + name;
+
+            Graph g1;
+
+            g1.read(filename);
+
+            auto t1 = std::chrono::high_resolution_clock::now();
+
+            g1.getAdjList();
+            g1.getGraphDegree();
+            g1.getRichClubCoef();
+
+            auto t2 = std::chrono::high_resolution_clock::now();
+            auto dif = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+            total +=dif;
+            inter+=1;
+            cout << "Elasped time " << dif << " miliseconds." << endl;
+
+            string id = name;
+            id.resize(id.size() - 3); //remove extension
+            g1.printResult(id);
+
+            //Compare results
+            string expectedFilename = "rich-club-tests/expected-" + id + "rcb";
+            ifstream resultFile(expectedFilename);
+            if (!resultFile.is_open())
+            {
+                cerr << "Could not open the results file" << endl;
+                exit(BAD_ARGUMENT);
+            }
+
+            float expected = -1.;
+            int i = 0;
+            while (resultFile >> expected)
+            {
+                if (abs(expected - g1.rks[i]) > .00001)
+                {
+                    cerr << "Bad Result! r(" << i << ") =" << g1.rks[i] << " expected " << expected << endl;
+                    exit(BAD_RESULT);
+                }
+                i++;
+            }
+            cout << "Sucess" << endl;
         }
-        i++;
     }
-    cout << "Sucess" << endl;
+    total/=inter;
+    cout << "Mean time " << total << endl;
     return 0;
 }
 
@@ -140,8 +156,8 @@ void Graph::getAdjList()
         adjList_[this->vertB[i]].emplace_back(this->vertA[i]);
     }
     this->adjList = adjList_;
-    cout << "List Adj Result" << endl;
-    this->printMatrix(this->adjList);
+    // cout << "List Adj Result" << endl;
+    // this->printMatrix(this->adjList);
     return;
 }
 
@@ -190,9 +206,10 @@ void Graph::getRichClubCoef()
             {
                 for (size_t j = 0; j < R_k.size(); j++)
                 {
-                    // Inicialmente havia um método hasElement para encapsular essa função, 
+                    // Inicialmente havia um método hasElement para encapsular essa função,
                     //mas por ser chamada muitas vezes percebi que só a chamada do método impactava consideravelmente a execução
-                    if (std::binary_search(adjList[R_k[i]].begin(), adjList[R_k[i]].end(), R_k[j]))
+                    if (this->hasElement(adjList[R_k[i]], R_k[j]))
+                        // if (std::binary_search(adjList[R_k[i]].begin(), adjList[R_k[i]].end(), R_k[j]))
                         rk = rk + 1.;
                 }
             }
@@ -212,7 +229,13 @@ void Graph::getRichClubCoef()
 
 bool Graph::hasElement(vector<int> v, int element)
 {
-    return std::binary_search(v.begin(), v.end(), element);
+    bool hasFound = false;
+    if (std::find(v.begin(), v.end(), element) != v.end())
+    {
+        //element exists in the vector
+        hasFound = true;
+    }
+    return hasFound;
 }
 
 void Graph::printMatrix(matrix_t matrix)
