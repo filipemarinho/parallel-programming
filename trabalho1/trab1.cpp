@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
 
 void Graph::getAdjList()
 {
-    matrix_t adjList_(this->nEdges);
+    matrix_t adjList_(this->nVertex);
     for (size_t i = 0; i < this->vertA.size(); i++)
     {
         // cout << "Linha: " << i << ", Aresta: " << this->vertA[i] << "," << this->vertB[i] << endl;
@@ -140,8 +140,8 @@ void Graph::getAdjList()
         adjList_[this->vertB[i]].emplace_back(this->vertA[i]);
     }
     this->adjList = adjList_;
-    // cout << "List Adj Result" << endl;
-    // this->printMatrix(this->adjList);
+    cout << "List Adj Result" << endl;
+    this->printMatrix(this->adjList);
     return;
 }
 
@@ -182,7 +182,7 @@ void Graph::getRichClubCoef()
 
         float rk = 0.;
 
-        if (nk >= 1)
+        if (nk > 1)
         {
             // cout << "Graph Rich Club Coefficient for k = " << k << ", n_k = " << nk << endl;
 
