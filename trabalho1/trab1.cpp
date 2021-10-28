@@ -1,4 +1,5 @@
 //g++ -o trab1.o trab1.cpp && ./trab1.o graph.net
+//Testar com -g -std=c++17 -pedantic -Wall -Wextra -Werror -Wshadow -Wconversion -Wunreachable-code
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -87,7 +88,8 @@ int main(int argc, char *argv[])
     double total = 0;
     int inter = 0;
     // string name = argv[1];rich-club-tests/small-1-001.net
-    vector<string> names = {"small-1-00", "small-2-00", "medium-1-00", "medium-2-00"}; //"large-1-00", "large-2-00", "huge-1-00", "huge-2-00"
+    vector<string> names = {"small-1-00", "small-2-00", "medium-1-00", "medium-2-00", "large-1-00", "large-2-00", "huge-1-00", "huge-2-00"}; //
+    //vector<string> names = {"huge-1-00"};
     for (auto _name : names)
     {
         string name;
@@ -109,10 +111,10 @@ int main(int argc, char *argv[])
             g1.getRichClubCoef();
 
             auto t2 = std::chrono::high_resolution_clock::now();
-            auto dif = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-            total +=dif;
-            inter+=1;
-            cout << "Elasped time " << dif << " miliseconds." << endl;
+            auto dif = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+            total += dif;
+            inter += 1;
+            cout << "Elasped time " << dif << " seconds." << endl;
 
             string id = name;
             id.resize(id.size() - 3); //remove extension
@@ -141,8 +143,8 @@ int main(int argc, char *argv[])
             cout << "Sucess" << endl;
         }
     }
-    total/=inter;
-    cout << "Total time " << total << " Mean time " << total/inter << endl;
+    total /= inter;
+    cout << "Total time " << total << " Mean time " << total / inter << endl;
     return 0;
 }
 
@@ -186,35 +188,29 @@ void Graph::getRichClubCoef()
         // cout << "k = " << k << endl;
         //Guarda o conjunto de arestas conectadas ao nó que pertence a R(k)
         vector<int> R_k;
+        float rk = 0.;
+        float _rk = 0;
+
+        // Find nodes with degree > k
         for (size_t i = 0; i < this->degrees.size(); i++)
         {
             if (this->degrees[i] > k)
             {
+
                 R_k.emplace_back(i);
+
+                //Find the connections with degree > k in the adj list
+                std::for_each(adjList[i].begin(), adjList[i].end(), [&](auto &item) -> void
+                              {
+                                  if (this->degrees[item] > k) rk += 1;
+                              });
             }
         }
 
         int nk = R_k.size();
 
-        float rk = 0.;
-
         if (nk > 1)
         {
-            // cout << "Graph Rich Club Coefficient for k = " << k << ", n_k = " << nk << endl;
-
-            for (size_t i = 0; i < R_k.size(); i++)
-            {
-                for (size_t j = 0; j < R_k.size(); j++)
-                {
-                    // Inicialmente havia um método hasElement para encapsular essa função,
-                    //mas por ser chamada muitas vezes percebi que só a chamada do método impactava consideravelmente a execução
-                    // if (this->hasElement(adjList[R_k[i]], R_k[j]))
-                    if(std::find(adjList[R_k[i]].begin(), adjList[R_k[i]].end(), R_k[j]) != adjList[R_k[i]].end())
-                        // if (std::binary_search(adjList[R_k[i]].begin(), adjList[R_k[i]].end(), R_k[j]))
-                        rk = rk + 1.;
-                }
-            }
-
             rk /= (nk * (nk - 1.));
         }
         else
