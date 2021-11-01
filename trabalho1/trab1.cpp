@@ -143,7 +143,6 @@ int main(int argc, char *argv[])
             cout << "Sucess" << endl;
         }
     }
-    total /= inter;
     cout << "Total time " << total << " Mean time " << total / inter << endl;
     return 0;
 }
