@@ -27,69 +27,28 @@ public:
     int maxDegree = 0;
     vector<float> rks;
 
-    //Return the adj list of a graph based on the vertex list
-    void getAdjList();
-
-    // Read the input file and set graph
+    // Lê o arquivo de entrada que contém o tamanho e as arestas do grafo
     void read(string filename);
 
-    //Return the graph degree for each node
+    // Computa a lista de adj do grafo
+    void getAdjList();
+
+    // Computa o grau de cada nó
     void getGraphDegree();
 
-    //Return the graph rich club coefficient for a degree k
+    // Computa o coef. de clube dos do grafo para o grau 0 até o grau máximo - 1
     void getRichClubCoef();
 
-    //Print Matrix to cout
-    void printMatrix(matrix_t matrix);
-
-    // Print the results
+    // Armazena os resultados no arquivo de saida
     void printResult(string filenameOutput);
-
-    //Return true if the vector has the element
-    bool hasElement(vector<int> v, int element);
 };
-
-void Graph::read(string filename)
-{
-    // Read from the text file
-    ifstream inputFile(filename);
-    if (!inputFile.is_open() || filename.substr(filename.find_last_of(".") + 1) != "net")
-    {
-        cerr << "Could not open the file, check extension. Filename - '"
-             << filename << "'" << endl;
-        exit(BAD_ARGUMENT);
-    }
-
-    inputFile >> this->nVertex >> this->nEdges;
-    cout << "Reading graph with " << this->nVertex << " vertices and " << this->nEdges << " arestas." << endl;
-
-    // this->vertA.resize(this->nEdges, 0);
-    // this->vertB.resize(this->nEdges,0);
-    this->vertA.reserve(this->nEdges);
-    this->vertB.reserve(this->nEdges);
-
-    //Lê todas as arestas do arquivo
-    for (int i = 0; i < this->nEdges; i++)
-    {
-        int tempA = 0, tempB = 0;
-        // inputFile >> this->vertA[i] >> this->vertB[i];
-        inputFile >> tempA >> tempB;
-        this->vertA.emplace_back(tempA);
-        this->vertB.emplace_back(tempB);
-        // cout << "Aresta: " << this->vertA[i] << "," << this->vertB[i] << endl;
-    }
-    inputFile.close();
-
-    return;
-}
 
 int main(int argc, char *argv[])
 {
+    //Automatizando testes:
     double total = 0;
     int inter = 0;
-    // string name = argv[1];rich-club-tests/small-1-001.net
     vector<string> names = {"small-1-00", "small-2-00", "medium-1-00", "medium-2-00", "large-1-00", "large-2-00", "huge-1-00", "huge-2-00"}; //
-    //vector<string> names = {"huge-1-00"};
     for (auto _name : names)
     {
         string name;
@@ -104,6 +63,7 @@ int main(int argc, char *argv[])
 
             g1.read(filename);
 
+            //Cronometrando tempo de execução
             auto t1 = std::chrono::high_resolution_clock::now();
 
             g1.getAdjList();
@@ -117,10 +77,10 @@ int main(int argc, char *argv[])
             cout << "Elasped time " << dif << " seconds." << endl;
 
             string id = name;
-            id.resize(id.size() - 3); //remove extension
+            id.resize(id.size() - 3); //remove extensão
             g1.printResult(id);
 
-            //Compare results
+            //Compara os resultados
             string expectedFilename = "rich-club-tests/expected-" + id + "rcb";
             ifstream resultFile(expectedFilename);
             if (!resultFile.is_open())
@@ -147,32 +107,68 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+void Graph::read(string filename)
+{
+    // Abre o arquivo para leitura
+    ifstream inputFile(filename);
+
+    // Verifica a extensão
+    if (!inputFile.is_open() || filename.substr(filename.find_last_of(".") + 1) != "net")
+    {
+        cerr << "Could not open the file, check extension. Filename - '"
+             << filename << "'" << endl;
+        exit(BAD_ARGUMENT);
+    }
+
+    // Le o numero de Vertices e Arestas
+    inputFile >> this->nVertex >> this->nEdges;
+    cout << "Reading graph with " << this->nVertex << " vertices and " << this->nEdges << " arestas." << endl;
+
+    // Reserva espaço para alocar todas as arestas do grafo
+    this->vertA.reserve(this->nEdges);
+    this->vertB.reserve(this->nEdges);
+
+    //Le as arestas
+    for (int i = 0; i < this->nEdges; i++)
+    {
+        int tempA, tempB;
+        inputFile >> tempA >> tempB;
+        this->vertA.emplace_back(tempA);
+        this->vertB.emplace_back(tempB);
+        // cout << "Aresta: " << this->vertA[i] << "," << this->vertB[i] << endl;
+    }
+
+    inputFile.close();
+    return;
+}
+
 void Graph::getAdjList()
 {
     matrix_t adjList_(this->nVertex);
+
+    // Para cada vertice atualiza a lista de adj dos nós correspondente
     for (size_t i = 0; i < this->vertA.size(); i++)
     {
-        // cout << "Linha: " << i << ", Aresta: " << this->vertA[i] << "," << this->vertB[i] << endl;
         adjList_[this->vertA[i]].emplace_back(this->vertB[i]);
         adjList_[this->vertB[i]].emplace_back(this->vertA[i]);
     }
+
     this->adjList = adjList_;
-    // cout << "List Adj Result" << endl;
-    // this->printMatrix(this->adjList);
+
     return;
 }
 
 void Graph::getGraphDegree()
 {
 
-    degrees.resize(this->adjList.size(), 0);
+    degrees.resize(this->nVertex, 0);
 
-    // cout << "Graph Degree" << endl;
+    // Calcula o grau de cada nó e obtem o grau máximo
     for (auto i = 0; i < this->adjList.size(); i++)
     {
-        // cout << "Degree of " << i << ": " << this->adjList[i].size() << endl;
         degrees[i] = this->adjList[i].size();
-        if (degrees[i] > this->maxDegree)
+
+        if (degrees[i] > this->maxDegree) //Obter o grau máximo aqui reduz um loop na lista de graus
             this->maxDegree = degrees[i];
     }
 
@@ -181,27 +177,25 @@ void Graph::getGraphDegree()
 
 void Graph::getRichClubCoef()
 {
-
-    for (int k = 0; k < this->maxDegree; k++)
+    for (int k = 0; k < this->maxDegree; k++) // Para cada k até k_max -1 calculo o coef. do clube dos ricos
     {
-        // cout << "k = " << k << endl;
-        //Guarda o conjunto de arestas conectadas ao nó que pertence a R(k)
         vector<int> R_k;
         float rk = 0.;
         float _rk = 0;
 
-        // Find nodes with degree > k
+        // Acha os nós com grau > k e conta os vizinhos com grau > k
         for (size_t i = 0; i < this->degrees.size(); i++)
         {
             if (this->degrees[i] > k)
             {
-
+                // Armazena no clube dos ricos o vertice
                 R_k.emplace_back(i);
 
-                //Find the connections with degree > k in the adj list
+                //Procura na lista de adj por conexões que tenham grau maior que k
                 std::for_each(adjList[i].begin(), adjList[i].end(), [&](auto &item) -> void
                               {
-                                  if (this->degrees[item] > k) rk += 1;
+                                  if (this->degrees[item] > k)
+                                      rk += 1;
                               });
             }
         }
@@ -217,43 +211,16 @@ void Graph::getRichClubCoef()
             rk = 1;
         }
 
-        // cout << "r(" << k <<") = " << rk << endl;
         this->rks.emplace_back(rk);
     }
     return;
 }
 
-bool Graph::hasElement(vector<int> v, int element)
-{
-    bool hasFound = false;
-    if (std::find(v.begin(), v.end(), element) != v.end())
-    {
-        //element exists in the vector
-        hasFound = true;
-    }
-    return hasFound;
-}
-
-void Graph::printMatrix(matrix_t matrix)
-{
-    for (auto i = 0; i < matrix.size(); i++)
-    {
-        cout << "Matrix line " << i << endl;
-        for (size_t j = 0; j < matrix[i].size(); j++)
-        {
-            cout << matrix[i][j] << ", ";
-        }
-        cout << endl;
-    }
-
-    cout << endl;
-}
-
 void Graph::printResult(string filenameOutput)
 {
-    //Compare results
+
     // ofstream outputFile(filenameOutput); //TO DO:
-    filenameOutput += +"rcb";
+    filenameOutput +="rcb";
 
     ofstream outputFile("result.rcb", ios::trunc);
     if (!outputFile.is_open())
