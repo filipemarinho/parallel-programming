@@ -16,6 +16,7 @@ enum Error
     BAD_FILE,
     BAD_RESULT
 };
+
 using namespace std;
 class Graph
 {
@@ -78,29 +79,8 @@ int main(int argc, char *argv[])
 
             string id = name;
             id.resize(id.size() - 3); //remove extensão
-            g1.printResult(id);
-
-            //Compara os resultados
-            string expectedFilename = "rich-club-tests/expected-" + id + "rcb";
-            ifstream resultFile(expectedFilename);
-            if (!resultFile.is_open())
-            {
-                cerr << "Could not open the results file" << endl;
-                exit(BAD_ARGUMENT);
-            }
-
-            float expected = -1.;
-            int i = 0;
-            while (resultFile >> expected)
-            {
-                if (abs(expected - g1.rks[i]) > .00001)
-                {
-                    cerr << "Bad Result! r(" << i << ") =" << g1.rks[i] << " expected " << expected << endl;
-                    exit(BAD_RESULT);
-                }
-                i++;
-            }
-            cout << "Sucess" << endl;
+            string resultFilename = "rich-club-results/expected-" + id + "rcb";
+            g1.printResult(resultFilename);
         }
     }
     cout << "Total time " << total << " Mean time " << total / inter << endl;
@@ -219,10 +199,10 @@ void Graph::getRichClubCoef()
 void Graph::printResult(string filenameOutput)
 {
 
-    // ofstream outputFile(filenameOutput); //TO DO:
-    filenameOutput +="rcb";
+    ofstream outputFile(filenameOutput, ios::trunc); //Create or overwrite file
+    //filenameOutput +="rcb";
 
-    ofstream outputFile("result.rcb", ios::trunc);
+    //ofstream outputFile("result.rcb", ios::trunc);
     if (!outputFile.is_open())
     {
         cerr << "Could not open the output file" << endl;
