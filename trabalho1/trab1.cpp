@@ -1,5 +1,3 @@
-//g++ -o trab1.o trab1.cpp && ./trab1.o graph.net && diff -w rich-club-results/ rich-club-expected/
-//Testar com -g -std=c++17 -pedantic -Wall -Wextra -Werror -Wshadow -Wconversion -Wunreachable-code
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -21,28 +19,28 @@ enum Error
 using namespace std;
 class Graph
 {
-public:
-    int nVertex, nEdges;
-    vector<int> vertA, vertB;
-    matrix_t adjList;
-    vector<int> degrees;
-    int maxDegree = 0;
-    vector<float> rks;
+    public:
+        int nVertex, nEdges;
+        vector<int> vertA, vertB;
+        matrix_t adjList;
+        vector<int> degrees;
+        int maxDegree = 0;
+        vector<float> rks;
 
-    // Lê o arquivo de entrada que contém o tamanho e as arestas do grafo
-    void read(string filename);
+        // Lê o arquivo de entrada que contém o tamanho e as arestas do grafo
+        void read(string filename);
 
-    // Computa a lista de adj do grafo
-    void getAdjList();
+        // Computa a lista de adj do grafo
+        void getAdjList();
 
-    // Computa o grau de cada nó
-    void getGraphDegree();
+        // Computa o grau de cada nó
+        void getGraphDegree();
 
-    // Computa o coef. de clube dos ricos do grafo para o grau 0 até o grau máximo - 1
-    void getRichClubCoef();
+        // Computa o coef. de clube dos ricos do grafo para o grau 0 até o grau máximo - 1
+        void getRichClubCoef();
 
-    // Armazena os resultados no arquivo de saida com a extensão .rcb
-    void printResult(string filenameOutput);
+        // Armazena os resultados no arquivo de saida com a extensão .rcb
+        void printResult(string filenameOutput);
 };
 
 int main(int argc, char *argv[])
@@ -115,7 +113,7 @@ void Graph::getAdjList()
     */
     matrix_t adjList_(this->nVertex);
 
-    // Para cada vertice atualiza a lista de adj dos nós correspondente
+    // Para cada vertice atualiza a lista de adj do nó correspondente
     for (size_t i = 0; i < this->vertA.size(); i++)
     {
         adjList_[this->vertA[i]].emplace_back(this->vertB[i]);
@@ -156,10 +154,11 @@ void Graph::getRichClubCoef()
         {
             if (this->degrees[i] > k)
             {
-                // Armazena no clube dos ricos o vertice
+                // Armazena o vértice no clube dos ricos 
                 R_k.emplace_back(i);
 
-                /* Procurar iterativamente na lista de adj ao incluir um vértice foi a melhor alternativa encontrada para calcular o valor do somatorio do coef. rk,
+                /* Procurar iterativamente na lista de adj ao incluir um vértice foi a melhor alternativa 
+                encontrada para calcular o valor do somatorio do coef. rk,
                 pois principalmente para k pequeno o custo de percorrer Rk é muito maior que percorrer a lista de adj do vértice. */
                 // Procura na lista de adj por conexões que tenham grau maior que k
                 std::for_each(adjList[i].begin(), adjList[i].end(), [&](auto &item) -> void
