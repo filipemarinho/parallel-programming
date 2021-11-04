@@ -1,3 +1,5 @@
+//g++ -o trab1.o trab1.cpp && ./trab1.o graph.net && diff -w rich-club-results/ rich-club-expected/
+//Testar com flags adicionais: -g -std=c++17 -pedantic -Wall -Wextra -Werror -Wshadow -Wconversion -Wunreachable-code
 #include <iostream>
 #include <fstream>
 #include <vector>
