@@ -1,4 +1,4 @@
-//g++ -o trab1.o trab1.cpp && ./trab1.o graph.net
+//g++ -o trab1.o trab1.cpp && ./trab1.o graph.net && diff -w rich-club-results/ rich-club-expected/
 //Testar com -g -std=c++17 -pedantic -Wall -Wextra -Werror -Wshadow -Wconversion -Wunreachable-code
 #include <iostream>
 #include <fstream>
@@ -9,6 +9,7 @@
 #include <chrono>
 
 typedef std::vector<std::vector<int>> matrix_t;
+
 enum Error
 {
     SUCCESS,
@@ -37,53 +38,37 @@ public:
     // Computa o grau de cada nó
     void getGraphDegree();
 
-    // Computa o coef. de clube dos do grafo para o grau 0 até o grau máximo - 1
+    // Computa o coef. de clube dos ricos do grafo para o grau 0 até o grau máximo - 1
     void getRichClubCoef();
 
-    // Armazena os resultados no arquivo de saida
+    // Armazena os resultados no arquivo de saida com a extensão .rcb
     void printResult(string filenameOutput);
 };
 
 int main(int argc, char *argv[])
 {
-    //Automatizando testes:
-    double total = 0;
-    int inter = 0;
-    vector<string> names = {"small-1-00", "small-2-00", "medium-1-00", "medium-2-00", "large-1-00", "large-2-00", "huge-1-00", "huge-2-00"}; //
-    for (auto _name : names)
-    {
-        string name;
-        for (int n = 0; n < 10; ++n)
-        {
-            name = _name + to_string(n) + ".net";
+    string filename = argv[1];
 
-            cout << std::setprecision(5) << std::fixed << name << endl;
-            string filename = "rich-club-tests/" + name;
+    cout << std::setprecision(5) << std::fixed;
 
-            Graph g1;
+    //Lê e inicializa o grafo
+    Graph g1;
+    g1.read(filename);
 
-            g1.read(filename);
+    //Cronometrando tempo de execução
+    auto t1 = std::chrono::high_resolution_clock::now();
 
-            //Cronometrando tempo de execução
-            auto t1 = std::chrono::high_resolution_clock::now();
+    //Calcula o coeficiente
+    g1.getAdjList();
+    g1.getGraphDegree();
+    g1.getRichClubCoef();
 
-            g1.getAdjList();
-            g1.getGraphDegree();
-            g1.getRichClubCoef();
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto dif = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+    cout << "Elasped time " << dif << " seconds." << endl;
 
-            auto t2 = std::chrono::high_resolution_clock::now();
-            auto dif = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-            total += dif;
-            inter += 1;
-            cout << "Elasped time " << dif << " seconds." << endl;
+    g1.printResult(filename);
 
-            string id = name;
-            id.resize(id.size() - 3); //remove extensão
-            string resultFilename = "rich-club-results/expected-" + id + "rcb";
-            g1.printResult(resultFilename);
-        }
-    }
-    cout << "Total time " << total << " Mean time " << total / inter << endl;
     return 0;
 }
 
@@ -100,10 +85,10 @@ void Graph::read(string filename)
         exit(BAD_ARGUMENT);
     }
 
-    // Le o numero de Vertices e Arestas
+    // Lê o numero de Vertices e Arestas
     inputFile >> this->nVertex >> this->nEdges;
-    cout << "Reading graph with " << this->nVertex << " vertices and " << this->nEdges << " arestas." << endl;
 
+    /* Reservar evita que o vector tenha que ser realocado dinâmicamente diversas vezes */
     // Reserva espaço para alocar todas as arestas do grafo
     this->vertA.reserve(this->nEdges);
     this->vertB.reserve(this->nEdges);
@@ -115,7 +100,6 @@ void Graph::read(string filename)
         inputFile >> tempA >> tempB;
         this->vertA.emplace_back(tempA);
         this->vertB.emplace_back(tempB);
-        // cout << "Aresta: " << this->vertA[i] << "," << this->vertB[i] << endl;
     }
 
     inputFile.close();
@@ -124,6 +108,11 @@ void Graph::read(string filename)
 
 void Graph::getAdjList()
 {
+    /* Para implementação dos grafos foi escolhida a lista de adj por lidar bem com grafos esparsos
+    ao contrário da matriz de adj que requer NxN elementos para representação mesmo que existam poucas ligações
+    e por facilitar o acesso aos vizinhos do vértice.
+
+    */
     matrix_t adjList_(this->nVertex);
 
     // Para cada vertice atualiza a lista de adj dos nós correspondente
@@ -146,9 +135,9 @@ void Graph::getGraphDegree()
     // Calcula o grau de cada nó e obtem o grau máximo
     for (auto i = 0; i < this->adjList.size(); i++)
     {
-        degrees[i] = this->adjList[i].size();
+        degrees[i] = (int)this->adjList[i].size();
 
-        if (degrees[i] > this->maxDegree) //Obter o grau máximo aqui reduz um loop na lista de graus
+        if (degrees[i] > this->maxDegree) /*Obter o grau máximo aqui reduz um loop na lista de graus*/
             this->maxDegree = degrees[i];
     }
 
@@ -157,11 +146,10 @@ void Graph::getGraphDegree()
 
 void Graph::getRichClubCoef()
 {
-    for (int k = 0; k < this->maxDegree; k++) // Para cada k até k_max -1 calculo o coef. do clube dos ricos
+    for (int k = 0; k < this->maxDegree; k++) // Para cada k até k_max -1 calcula o coef. do clube dos ricos
     {
-        vector<int> R_k;
-        float rk = 0.;
-        float _rk = 0;
+        vector<int> R_k; // Armazena o lista de vertices do clube dos ricos
+        float rk = 0.;   // Coeficiente de clube dos ricos
 
         // Acha os nós com grau > k e conta os vizinhos com grau > k
         for (size_t i = 0; i < this->degrees.size(); i++)
@@ -171,7 +159,9 @@ void Graph::getRichClubCoef()
                 // Armazena no clube dos ricos o vertice
                 R_k.emplace_back(i);
 
-                //Procura na lista de adj por conexões que tenham grau maior que k
+                /* Procurar iterativamente na lista de adj ao incluir um vértice foi a melhor alternativa encontrada para calcular o valor do somatorio do coef. rk,
+                pois principalmente para k pequeno o custo de percorrer Rk é muito maior que percorrer a lista de adj do vértice. */
+                // Procura na lista de adj por conexões que tenham grau maior que k
                 std::for_each(adjList[i].begin(), adjList[i].end(), [&](auto &item) -> void
                               {
                                   if (this->degrees[item] > k)
@@ -180,32 +170,29 @@ void Graph::getRichClubCoef()
             }
         }
 
-        int nk = R_k.size();
+        int nk = (int) R_k.size();
 
         if (nk > 1)
-        {
-            rk /= (nk * (nk - 1.));
-        }
+            rk /= (float)(nk * (nk - 1.));
         else
-        {
             rk = 1;
-        }
 
         this->rks.emplace_back(rk);
     }
+
     return;
 }
 
-void Graph::printResult(string filenameOutput)
+void Graph::printResult(string filename)
 {
 
-    ofstream outputFile(filenameOutput, ios::trunc); //Create or overwrite file
-    //filenameOutput +="rcb";
-
-    //ofstream outputFile("result.rcb", ios::trunc);
+    // Muda a extensão
+    filename.resize(filename.size() - 3);
+    filename += "rcb";
+    ofstream outputFile(filename, ios::trunc); //Cria ou sobrescreve o arquivo de resultados
     if (!outputFile.is_open())
     {
-        cerr << "Could not open the output file" << endl;
+        cerr << "Could not open the output file: " << filename << endl;
         exit(BAD_ARGUMENT);
     }
 
