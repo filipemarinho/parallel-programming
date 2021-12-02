@@ -145,8 +145,8 @@ void Graph::getGraphDegree()
     {
         degrees[i] = (int)this->adjList[i].size();
 
-        if (degrees[i] > this->maxDegree) /*Obter o grau máximo aqui reduz um loop na lista de graus*/
-            this->maxDegree = degrees[i];
+       if (degrees[i] > this->maxDegree) /*Obter o grau máximo aqui reduz um loop na lista de graus*/
+           this->maxDegree = degrees[i];
     }
 
     return;
@@ -154,41 +154,45 @@ void Graph::getGraphDegree()
 
 void Graph::getRichClubCoef()
 {
-    float rk = 0.;   // Coeficiente de clube dos ricos
 
     for (int k = 0; k < this->maxDegree; k++) // Para cada k até k_max-1 calcula o coef. do clube dos ricos
     {
+        float rk = 0.;   // Coeficiente de clube dos ricos
         int nk = 0;
         vector<int> degrees = this->degrees;
         int i;
 
         // Acha os nós com grau > k e conta os vizinhos com grau > k
-        #pragma omp parallel for default(none) shared(degrees,k) \
+        //#pragma omp parallel for default(none) shared(degrees,k) \
             private(i) reduction(+:rk) reduction(+:nk)
         for (i = 0; i < degrees.size(); i++)
         {
             if (degrees[i] > k)
             {
                 //if (omp_get_thread_num()==) printf("Thread id: %d, i: %d \n", omp_get_thread_num(), i);
-                // Armazena o vértice no clube dos ricos 
+                
+                // Armazena o numero total de membros do clube dos ricos 
                 nk += 1;
+
                 /* Procurar iterativamente na lista de adj ao incluir um vértice foi a melhor alternativa 
-                encontrada para calcular o valor do somatorio do coef. rk,
+                encontrada para calcular o valor do somatorio do coef. rk,     
                 pois principalmente para k pequeno o custo de percorrer Rk é muito maior que percorrer a lista de adj do vértice. */
                 // Procura na lista de adj por conexões que tenham grau maior que k
                 std::for_each(adjList[i].begin(), adjList[i].end(), [&](auto &item) -> void
                               {
                                   if (degrees[item] > k)
+                                      // Calculo o somatório contando cada vizinho que também participa do clube
                                       rk += 1;
                               });
             }
         }
 
-        if (nk > 1)
+        if (nk > 1){
             rk /= (float)(nk * (nk - 1.));
-        else
+        }
+        else{
             rk = 1;
-
+        }
         this->rks.emplace_back(rk);
     }
 
@@ -202,6 +206,7 @@ void Graph::printResult(string filename)
     filename.resize(filename.size() - 3);
     filename += "rcb";
     ofstream outputFile(filename, ios::trunc); //Cria ou sobrescreve o arquivo de resultados
+    cout << "Arquivo de saida: " << filename << endl;
     if (!outputFile.is_open())
     {
         cerr << "Could not open the output file: " << filename << endl;
