@@ -1,5 +1,41 @@
-//g++ -fopenmp -o trab2.o trab2.cpp && ./trab2.o rich-club-results/huge-1-000.net && diff -w -s rich-club-results/huge-1-000.rcb rich-club-expected/huge-1-000.rcb 
-//Testar com flags adicionais: -g -std=c++17 -pedantic -Wall -Wextra -Werror -Wshadow -Wconversion -Wunreachable-code
+/*
+Filipe Antunes Marinho - 10438866
+Para paralelização foi utilizada uma abordagem baseada na distribuição dos dados do problema.
+Foram calculados os tempos gastos em cada método da classe pra diversos inputs, 
+com isso foi possivel perceber que a maior parte do tempo de execução era gasto 
+na rotina de cálculo do coeficiente, mas os tempos de leitura, inicialização da 
+lista de adj e computação dos graus escalava bem com o tamanho do problema.
+Então foi feita a paralelização somente do método 'getRichClubCoef'.
+
+A partir da analise do grafo de dependencia do problema é fácil achar regiões 
+com computações independentes para paralelização. Assim foram paralelizados o 
+loop de calculo dos rk's e o loop de busca dos participantes do clube, membros de Rk. 
+Quando k é pequeno o tamanho de Rk tende ao número de nós no grafo. 
+Isso cria um desbalanceamento de carga no problema, por isso a paralelização do calculos dos rk's
+foi necessária, para aumentar a granulosidade do problema evitando que uma thread fique sobrecarregada.  
+
+Foi criado um script para ler e executar todos os arquivos testes e o tempo de execução foi cronometrado 
+utilizando o comando 'time' para servir de métrica para comparação
+Foram obtidos:
+
+Antes da paralelização (trabalho 1)
+    real    13m16,279s  //wall clock time
+    user    13m12,636s  //total user time, including all threads
+    sys     0m3,568s    //time spent in kernel, IOs...
+
+Depois da paralelização:
+    real    5m56,421s
+    user    14m13,169s
+    sys     0m3,946s
+
+Analisando o tempo 'real' ( que seria o T_p serial/parallel runtime) vemos que o tempo 
+de execução diminui bastante, utilizando 8 cores o speedup foi de 2,2 em média
+Comparando o tempo de 'user' (que seria o T_all tempo total) vemos que o tempo total de 
+calculo permaneceu próximo ao valor anterior, ou seja, o overhead foi bem controlado.
+O total overhead foi de 56s nesse caso.
+
+*/
+
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -11,6 +47,8 @@
 
 typedef std::vector<std::vector<int>> matrix_t;
 
+using namespace std;
+
 enum Error
 {
     SUCCESS,
@@ -18,8 +56,6 @@ enum Error
     BAD_FILE,
     BAD_RESULT
 };
-
-    using namespace std;
 class Graph
 {
     public:
@@ -51,7 +87,6 @@ int main(int argc, char *argv[])
     string filename = argv[1];
 
     cout << std::setprecision(5) << std::fixed;
-    cout << "N threads: " << omp_get_num_threads() << endl;
 
     //Lê e inicializa o grafo
     Graph g1;
@@ -62,22 +97,16 @@ int main(int argc, char *argv[])
 
     //Calcula o coeficiente
     g1.getAdjList();
-    auto t11 = std::chrono::high_resolution_clock::now();
     g1.getGraphDegree();
-    auto t12 = std::chrono::high_resolution_clock::now();
     g1.getRichClubCoef();
 
     auto t2 = std::chrono::high_resolution_clock::now();
     auto dif = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
     cout << "Total elasped time " << dif << " seconds." << endl;
 
-    auto dif1 = std::chrono::duration_cast<std::chrono::seconds>(t11 - t1).count();
-    auto dif11 = std::chrono::duration_cast<std::chrono::seconds>(t12 - t11).count();
-    auto dif12 = std::chrono::duration_cast<std::chrono::seconds>(t2 - t12).count();
-    cout << "Individual times: Adj List = " << dif1 << " , degree = " << dif11 << " , coef = " << dif12 << endl;
     g1.printResult(filename);
 
-    return 0;
+    return SUCCESS;
 }
 
 void Graph::read(string filename)
@@ -90,7 +119,7 @@ void Graph::read(string filename)
     {
         cerr << "Could not open the file, check extension. Filename - '"
              << filename << "'" << endl;
-        exit(BAD_ARGUMENT);
+        exit(BAD_FILE);
     }
 
     // Lê o numero de Vertices e Arestas
@@ -119,8 +148,8 @@ void Graph::getAdjList()
     /* Para implementação dos grafos foi escolhida a lista de adj por lidar bem com grafos esparsos
     ao contrário da matriz de adj que requer NxN elementos para representação mesmo que existam poucas ligações
     e por facilitar o acesso aos vizinhos do vértice.
-
     */
+
     matrix_t adjList_(this->nVertex);
 
     // Para cada vertice atualiza a lista de adj do nó correspondente
@@ -155,11 +184,15 @@ void Graph::getGraphDegree()
 void Graph::getRichClubCoef()
 {
 
-    for (int k = 0; k < this->maxDegree; k++) // Para cada k até k_max-1 calcula o coef. do clube dos ricos
+    int maxDegree = this->maxDegree;
+    vector<float> _rks(maxDegree, 0.0); // Garante que o tamanho não seja alterado dinamicamente
+    vector<int> degrees = this->degrees;
+
+    #pragma omp parallel for default(none) shared(degrees, adjList, _rks, maxDegree)
+    for (int k = 0; k < maxDegree; k++) // Para cada k até k_max-1 calcula o coef. do clube dos ricos
     {
         float rk = 0.;   // Coeficiente de clube dos ricos
         int nk = 0;
-        vector<int> degrees = this->degrees;
         int i;
 
         // Acha os nós com grau > k e conta os vizinhos com grau > k
@@ -169,14 +202,13 @@ void Graph::getRichClubCoef()
         {
             if (degrees[i] > k)
             {
-                //if (omp_get_thread_num()==) printf("Thread id: %d, i: %d \n", omp_get_thread_num(), i);
                 
                 // Armazena o numero total de membros do clube dos ricos 
                 nk += 1;
 
                 /* Procurar iterativamente na lista de adj ao incluir um vértice foi a melhor alternativa 
-                encontrada para calcular o valor do somatorio do coef. rk,     
-                pois principalmente para k pequeno o custo de percorrer Rk é muito maior que percorrer a lista de adj do vértice. */
+                encontrada para calcular o valor do somatorio do coef. rk, pois principalmente para k 
+                pequeno o custo de percorrer Rk é muito maior que percorrer a lista de adj do vértice. */
                 // Procura na lista de adj por conexões que tenham grau maior que k
                 std::for_each(adjList[i].begin(), adjList[i].end(), [&](auto &item) -> void
                               {
@@ -193,9 +225,11 @@ void Graph::getRichClubCoef()
         else{
             rk = 1;
         }
-        this->rks.emplace_back(rk);
+
+        _rks[k] = rk;
     }
 
+    this->rks = _rks;
     return;
 }
 
