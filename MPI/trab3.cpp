@@ -1,4 +1,4 @@
-//g++ - -g -std=c++17 -pedantic -Wall -Wextra -Werror -Wshadow -Wconversion -Wunreachable-code -o trab3.o trab3.cpp
+//g++ - mpic++ -g -std=c++17 -pedantic -Wall -Wextra -o trab3.o trab3.cpp && ./trab3.o 
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
@@ -48,8 +48,6 @@ class Graph
 
 int main(int argc, char *argv[])
 {
-    string filename = argv[1];
-
     MPI_Init(&argc, &argv);
 
     int nprocs, rank;
@@ -62,6 +60,7 @@ int main(int argc, char *argv[])
     MPI_Finalize();
 
     return 0;
+    // string filename = argv[1];
     // cout << std::setprecision(5) << std::fixed;
 
     // //Lê e inicializa o grafo
@@ -164,7 +163,7 @@ void Graph::getRichClubCoef()
     vector<float> _rks(maxDegree, 0.0); // Garante que o tamanho não seja alterado dinamicamente
     vector<int> degrees = this->degrees;
 
-    #pragma omp parallel for default(none) shared(degrees, adjList, _rks, maxDegree)
+    // #pragma omp parallel for default(none) shared(degrees, adjList, _rks, maxDegree)
     for (int k = 0; k < maxDegree; k++) // Para cada k até k_max-1 calcula o coef. do clube dos ricos
     {
         float rk = 0.;   // Coeficiente de clube dos ricos
@@ -172,7 +171,7 @@ void Graph::getRichClubCoef()
         int i;
 
         // Acha os nós com grau > k e conta os vizinhos com grau > k
-        #pragma omp parallel for default(none) shared(degrees,k) \
+        // #pragma omp parallel for default(none) shared(degrees,k) \
             private(i) reduction(+:rk) reduction(+:nk)
         for (i = 0; i < degrees.size(); i++)
         {
