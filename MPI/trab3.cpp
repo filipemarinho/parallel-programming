@@ -9,9 +9,6 @@
 #include <chrono>
 #include <mpi.h>
 
-#include <cstring> //para usar o strlen remover depois?
-
-
 typedef std::vector<std::vector<int>> matrix_t;
 using namespace std;
 
@@ -75,29 +72,24 @@ int main(int argc, char *argv[])
     MPI_Bcast(&g1.nVertex, 1, MPI_INT, 0, MPI_COMM_WORLD);
     printf("Process %d of %d: has nVertex = %d .\n", rank, nprocs, g1.nVertex);
 
-
     if (rank == 0){
         // //Cronometrando tempo de execução
         t1 = std::chrono::high_resolution_clock::now();
 
         g1.getAdjList();
-        g1.getGraphDegree();
     }
-    MPI_Barrier(MPI_COMM_WORLD);
+    // MPI_Barrier(MPI_COMM_WORLD);
+    g1.getGraphDegree();
     
-    // if (rank != 0) g1.degrees.resize(g1.nVertex,0);
-
-    // printf("Process %d of %d: has degree size = %d .\n", rank, nprocs, g1.degrees.size());
-    
-    // MPI_Bcast(&g1.degrees, g1.nVertex, MPI_INT, 0, MPI_COMM_WORLD);
-    // printf("Process %d of %d: received degree[0] = %d .\n", rank, nprocs, g1.degrees[0]);
+    MPI_Bcast(&g1.degrees[0], g1.nVertex, MPI_INT, 0, MPI_COMM_WORLD);
+    printf("Process %d of %d: after degree[0] = %d .\n", rank, nprocs, g1.degrees[0]);
 
     MPI_Bcast(&g1.maxDegree, 1, MPI_INT, 0, MPI_COMM_WORLD);
     printf("Process %d of %d: has maxDegree = %d .\n", rank, nprocs, g1.maxDegree);
 
+    MPI_Barrier(MPI_COMM_WORLD);
     // g1.getRichClubCoef();
 
-    MPI_Barrier(MPI_COMM_WORLD);
     if (rank == 0){
     t2 = std::chrono::high_resolution_clock::now();
     auto dif = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
@@ -173,15 +165,18 @@ void Graph::getGraphDegree()
 {
 
     degrees.resize(this->nVertex, 0);
-
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    if (rank ==0){
     // Calcula o grau de cada nó e obtem o grau máximo
     for (auto i = 0; i < this->adjList.size(); i++)
     {
         degrees[i] = (int)this->adjList[i].size();
-        cout << degrees[i] <<  endl;
        if (degrees[i] > this->maxDegree) /*Obter o grau máximo aqui reduz um loop na lista de graus*/
            this->maxDegree = degrees[i];
     }
+    }
+
     return ;
 }
 
