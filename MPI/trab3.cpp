@@ -1,4 +1,4 @@
-//g++ - mpic++ -g -std=c++17 -pedantic -Wall -Wextra -o trab3.o trab3.cpp && ./trab3.o 
+// mpic++ -g -std=c++17 -O2 -Wpedantic -Wall -Wextra -o trab3.o trab3.cpp && mpirun -np 2 ./trab3.o 
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
@@ -48,18 +48,20 @@ class Graph
 
 int main(int argc, char *argv[])
 {
-    MPI_Init(&argc, &argv);
+    MPI_Init(&argc, &argv); // antes de usar agrc e argv, pode alterar esses argumentos para utilização
 
     int nprocs, rank;
 
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+
     printf("Process %d of %d is running.\n", rank, nprocs);
 
     MPI_Finalize();
 
     return 0;
+    
     // string filename = argv[1];
     // cout << std::setprecision(5) << std::fixed;
 
