@@ -9,6 +9,9 @@
 #include <chrono>
 #include <mpi.h>
 
+#include <cstring> //para usar o strlen remover depois?
+
+
 typedef std::vector<std::vector<int>> matrix_t;
 using namespace std;
 
@@ -62,8 +65,8 @@ int main(int argc, char *argv[])
 
 
     if (rank == 0){
-    printf("This process only run in rank %d of %d.\n", rank, nprocs);
     string filename = argv[1];
+    printf("This process only run in rank %d of %d.\n", rank, nprocs);
 
     //Lê e inicializa o grafo
     Graph g1;
@@ -77,23 +80,51 @@ int main(int argc, char *argv[])
     g1.getAdjList();
     g1.getGraphDegree();
     }
+    const int MAX = 256;      // Max message size.
+    const int TAG_BASE = 100; // Base value for the tags.
+    char message[MAX];
+
+    if (rank == 0) {
+    // Process 0 receives the messages.
+    int mess_size;
+
+    // Receive one message from each of the other processes.
+    for (int i = 1; i < nprocs; i++) {
+        MPI_Status status;
+
+        MPI_Recv(message, MAX, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG,
+                MPI_COMM_WORLD, &status);
+        // MPI_Recv(message, MAX, MPI_CHAR, i, i + TAG_BASE, MPI_COMM_WORLD, &status);
+
+        MPI_Get_count(&status, MPI_CHAR, &mess_size);
+
+        printf("Message received from %d with tag %d and size %d: %s\n",
+                status.MPI_SOURCE, status.MPI_TAG, mess_size, message);
+    }
+    } else {
+    // Other processes send a message to rank 0.
+    sprintf(message, "Hello from your %s friend, process %d",
+            (rank % 2 == 0) ? "best" : "good", rank);
+
+    // O tag nao precisa variar com o rank.
+    // Esta assim apenas para demonstrar MPI_ANY_TAG.
+    MPI_Send(message, strlen(message) + 1, MPI_CHAR, 0, rank + TAG_BASE,
+                MPI_COMM_WORLD);
+    }
     // g1.getRichClubCoef();
 
 
     if (rank == 0){
+
     t2 = std::chrono::high_resolution_clock::now();
     auto dif = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
     printf("Total elasped time: %d seconds\n", dif);
-    }
-    
-    MPI_Finalize();
-
 
     // g1.printResult(filename);
 
-    return 0;
+    }
     
-
+    MPI_Finalize();
     return SUCCESS;
 }
 
@@ -107,6 +138,7 @@ void Graph::read(string filename)
     {
         cerr << "Could not open the file, check extension. Filename - '"
              << filename << "'" << endl;
+        MPI_Finalize();
         exit(BAD_FILE);
     }
 
@@ -185,8 +217,7 @@ void Graph::getRichClubCoef()
         int i;
 
         // Acha os nós com grau > k e conta os vizinhos com grau > k
-        // #pragma omp parallel for default(none) shared(degrees,k) \
-            private(i) reduction(+:rk) reduction(+:nk)
+        // #pragma omp parallel for default(none) shared(degrees,k) private(i) reduction(+:rk) reduction(+:nk)
         for (i = 0; i < degrees.size(); i++)
         {
             if (degrees[i] > k)
@@ -233,6 +264,7 @@ void Graph::printResult(string filename)
     if (!outputFile.is_open())
     {
         cerr << "Could not open the output file: " << filename << endl;
+        MPI_Finalize();
         exit(BAD_ARGUMENT);
     }
 
