@@ -64,64 +64,46 @@ int main(int argc, char *argv[])
     cout << std::setprecision(5) << std::fixed;
 
 
-    if (rank == 0){
     string filename = argv[1];
-    printf("This process only run in rank %d of %d.\n", rank, nprocs);
-
     //Lê e inicializa o grafo
     Graph g1;
+
+    if (rank == 0){
     g1.read(filename);
-    
-
-    // //Cronometrando tempo de execução
-    t1 = std::chrono::high_resolution_clock::now();
-
-    //Calcula o coeficiente
-    g1.getAdjList();
-    g1.getGraphDegree();
     }
-    const int MAX = 256;      // Max message size.
-    const int TAG_BASE = 100; // Base value for the tags.
-    char message[MAX];
 
-    if (rank == 0) {
-    // Process 0 receives the messages.
-    int mess_size;
-
-    // Receive one message from each of the other processes.
-    for (int i = 1; i < nprocs; i++) {
-        MPI_Status status;
-
-        MPI_Recv(message, MAX, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG,
-                MPI_COMM_WORLD, &status);
-        // MPI_Recv(message, MAX, MPI_CHAR, i, i + TAG_BASE, MPI_COMM_WORLD, &status);
-
-        MPI_Get_count(&status, MPI_CHAR, &mess_size);
-
-        printf("Message received from %d with tag %d and size %d: %s\n",
-                status.MPI_SOURCE, status.MPI_TAG, mess_size, message);
-    }
-    } else {
-    // Other processes send a message to rank 0.
-    sprintf(message, "Hello from your %s friend, process %d",
-            (rank % 2 == 0) ? "best" : "good", rank);
-
-    // O tag nao precisa variar com o rank.
-    // Esta assim apenas para demonstrar MPI_ANY_TAG.
-    MPI_Send(message, strlen(message) + 1, MPI_CHAR, 0, rank + TAG_BASE,
-                MPI_COMM_WORLD);
-    }
-    // g1.getRichClubCoef();
+    MPI_Bcast(&g1.nVertex, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    printf("Process %d of %d: has nVertex = %d .\n", rank, nprocs, g1.nVertex);
 
 
     if (rank == 0){
+        // //Cronometrando tempo de execução
+        t1 = std::chrono::high_resolution_clock::now();
 
+        g1.getAdjList();
+        g1.getGraphDegree();
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+    
+    // if (rank != 0) g1.degrees.resize(g1.nVertex,0);
+
+    // printf("Process %d of %d: has degree size = %d .\n", rank, nprocs, g1.degrees.size());
+    
+    // MPI_Bcast(&g1.degrees, g1.nVertex, MPI_INT, 0, MPI_COMM_WORLD);
+    // printf("Process %d of %d: received degree[0] = %d .\n", rank, nprocs, g1.degrees[0]);
+
+    MPI_Bcast(&g1.maxDegree, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    printf("Process %d of %d: has maxDegree = %d .\n", rank, nprocs, g1.maxDegree);
+
+    // g1.getRichClubCoef();
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (rank == 0){
     t2 = std::chrono::high_resolution_clock::now();
     auto dif = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
     printf("Total elasped time: %d seconds\n", dif);
 
     // g1.printResult(filename);
-
     }
     
     MPI_Finalize();
@@ -160,7 +142,9 @@ void Graph::read(string filename)
     }
 
     inputFile.close();
+
     printf("Read graph from %s \n with %d vertex and %d edges \n", filename.c_str(), this->nVertex, this->nEdges);
+
     return;
 }
 
@@ -194,12 +178,11 @@ void Graph::getGraphDegree()
     for (auto i = 0; i < this->adjList.size(); i++)
     {
         degrees[i] = (int)this->adjList[i].size();
-
+        cout << degrees[i] <<  endl;
        if (degrees[i] > this->maxDegree) /*Obter o grau máximo aqui reduz um loop na lista de graus*/
            this->maxDegree = degrees[i];
     }
-
-    return;
+    return ;
 }
 
 void Graph::getRichClubCoef()
@@ -209,47 +192,47 @@ void Graph::getRichClubCoef()
     vector<float> _rks(maxDegree, 0.0); // Garante que o tamanho não seja alterado dinamicamente
     vector<int> degrees = this->degrees;
 
-    // #pragma omp parallel for default(none) shared(degrees, adjList, _rks, maxDegree)
-    for (int k = 0; k < maxDegree; k++) // Para cada k até k_max-1 calcula o coef. do clube dos ricos
-    {
-        float rk = 0.;   // Coeficiente de clube dos ricos
-        int nk = 0;
-        int i;
+    // //  shared(degrees, adjList, _rks, maxDegree)
+    // for (int k = 0; k < maxDegree; k++) // Para cada k até k_max-1 calcula o coef. do clube dos ricos
+    // {
+    //     float rk = 0.;   // Coeficiente de clube dos ricos
+    //     int nk = 0;
+    //     int i;
 
-        // Acha os nós com grau > k e conta os vizinhos com grau > k
-        // #pragma omp parallel for default(none) shared(degrees,k) private(i) reduction(+:rk) reduction(+:nk)
-        for (i = 0; i < degrees.size(); i++)
-        {
-            if (degrees[i] > k)
-            {
+    //     // Acha os nós com grau > k e conta os vizinhos com grau > k
+    //     //  shared(degrees,k) private(i) reduction(+:rk) reduction(+:nk)
+    //     for (i = 0; i < degrees.size(); i++)
+    //     {
+    //         if (degrees[i] > k)
+    //         {
                 
-                // Armazena o numero total de membros do clube dos ricos 
-                nk += 1;
+    //             // Armazena o numero total de membros do clube dos ricos 
+    //             nk += 1;
 
-                /* Procurar iterativamente na lista de adj ao incluir um vértice foi a melhor alternativa 
-                encontrada para calcular o valor do somatorio do coef. rk, pois principalmente para k 
-                pequeno o custo de percorrer Rk é muito maior que percorrer a lista de adj do vértice. */
-                // Procura na lista de adj por conexões que tenham grau maior que k
-                std::for_each(adjList[i].begin(), adjList[i].end(), [&](auto &item) -> void
-                              {
-                                  if (degrees[item] > k)
-                                      // Calculo o somatório contando cada vizinho que também participa do clube
-                                      rk += 1;
-                              });
-            }
-        }
+    //             /* Procurar iterativamente na lista de adj ao incluir um vértice foi a melhor alternativa 
+    //             encontrada para calcular o valor do somatorio do coef. rk, pois principalmente para k 
+    //             pequeno o custo de percorrer Rk é muito maior que percorrer a lista de adj do vértice. */
+    //             // Procura na lista de adj por conexões que tenham grau maior que k
+    //             std::for_each(adjList[i].begin(), adjList[i].end(), [&](auto &item) -> void
+    //                           {
+    //                               if (degrees[item] > k)
+    //                                   // Calculo o somatório contando cada vizinho que também participa do clube
+    //                                   rk += 1;
+    //                           });
+    //         }
+    //     }
 
-        if (nk > 1){
-            rk /= (float)(nk * (nk - 1.));
-        }
-        else{
-            rk = 1;
-        }
+    //     if (nk > 1){
+    //         rk /= (float)(nk * (nk - 1.));
+    //     }
+    //     else{
+    //         rk = 1;
+    //     }
 
-        _rks[k] = rk;
-    }
+    //     _rks[k] = rk;
+    // }
 
-    this->rks = _rks;
+    // this->rks = _rks;
     return;
 }
 
