@@ -1,4 +1,4 @@
-// mpic++ -g -std=c++17 -O2 -Wpedantic -Wall -Wextra -o trab3.o trab3.cpp && mpirun -np 2 ./trab3.o 
+// mpic++ -g -std=c++17 -O2 -Wpedantic -Wall -Wextra -o trab3.o trab3.cpp && mpirun -oversubscribe -np 5 ./trab3.o ../../../rich-club-results/huge-1-000.net
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
@@ -10,7 +10,6 @@
 #include <mpi.h>
 
 typedef std::vector<std::vector<int>> matrix_t;
-
 using namespace std;
 
 enum Error
@@ -58,30 +57,42 @@ int main(int argc, char *argv[])
 
     printf("Process %d of %d is running.\n", rank, nprocs);
 
+    std::chrono::high_resolution_clock::time_point t1,t2; 
+    cout << std::setprecision(5) << std::fixed;
+
+
+    if (rank == 0){
+    printf("This process only run in rank %d of %d.\n", rank, nprocs);
+    string filename = argv[1];
+
+    //Lê e inicializa o grafo
+    Graph g1;
+    g1.read(filename);
+    
+
+    // //Cronometrando tempo de execução
+    t1 = std::chrono::high_resolution_clock::now();
+
+    //Calcula o coeficiente
+    g1.getAdjList();
+    g1.getGraphDegree();
+    }
+    // g1.getRichClubCoef();
+
+
+    if (rank == 0){
+    t2 = std::chrono::high_resolution_clock::now();
+    auto dif = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+    printf("Total elasped time: %d seconds\n", dif);
+    }
+    
     MPI_Finalize();
+
+
+    // g1.printResult(filename);
 
     return 0;
     
-    // string filename = argv[1];
-    // cout << std::setprecision(5) << std::fixed;
-
-    // //Lê e inicializa o grafo
-    // Graph g1;
-    // g1.read(filename);
-
-    // //Cronometrando tempo de execução
-    // auto t1 = std::chrono::high_resolution_clock::now();
-
-    // //Calcula o coeficiente
-    // g1.getAdjList();
-    // g1.getGraphDegree();
-    // g1.getRichClubCoef();
-
-    // auto t2 = std::chrono::high_resolution_clock::now();
-    // auto dif = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    // cout << "Total elasped time " << dif << " seconds." << endl;
-
-    // g1.printResult(filename);
 
     return SUCCESS;
 }
@@ -117,6 +128,7 @@ void Graph::read(string filename)
     }
 
     inputFile.close();
+    printf("Read graph from %s \n with %d vertex and %d edges \n", filename.c_str(), this->nVertex, this->nEdges);
     return;
 }
 
