@@ -71,36 +71,27 @@ int main(int argc, char *argv[])
     MPI_Bcast(&g1.nVertex, 1, MPI_INT, 0, MPI_COMM_WORLD);
     printf("Process %d of %d: has nVertex = %d.\n", rank, nprocs, g1.nVertex);
 
-    if (rank == 0){
-        // //Cronometrando tempo de execução
-        t1 = std::chrono::high_resolution_clock::now();
+    MPI_Bcast(&g1.nEdges, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    printf("Process %d of %d: has nEdges = %d.\n", rank, nprocs, g1.nEdges);
 
-        g1.getAdjList();
+    if (rank !=0){
+    g1.vertA.reserve(g1.nEdges);
+    g1.vertB.reserve(g1.nEdges);
     }
+    MPI_Bcast(&g1.vertA[0], g1.nVertex, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&g1.vertB[0], g1.nVertex, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
+    printf("Process %d of %d: after vertA[0] = %d .\n", rank, nprocs, g1.vertA[0]);
+    printf("Process %d of %d: after vertB[0] = %d .\n", rank, nprocs, g1.vertB[0]);
 
+    // //Cronometrando tempo de execução
+    t1 = std::chrono::high_resolution_clock::now();
+
+    g1.getAdjList();
     g1.getGraphDegree();
-    
-    MPI_Bcast(&g1.degrees[0], g1.nVertex, MPI_INT, 0, MPI_COMM_WORLD);
-    printf("Process %d of %d: after degree[0] = %d .\n", rank, nprocs, g1.degrees[0]);
-
-    MPI_Bcast(&g1.maxDegree, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    printf("Process %d of %d: has maxDegree = %d .\n", rank, nprocs, g1.maxDegree);
+    // g1.getRichClubCoef();
 
     MPI_Barrier(MPI_COMM_WORLD);
-
-    if (rank != 0) g1.adjList.reserve(g1.nVertex);
-
-    for (auto i=0; i<g1.nVertex; i++){
-        int size = g1.adjList[i].size();
-        MPI_Bcast(&size, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        // printf("Size of i = %d is %d.", i, size);
-        if (rank != 0) g1.adjList[i].reserve(size);
-        MPI_Bcast(&g1.adjList[i][0], size, MPI_INT, 0, MPI_COMM_WORLD);
-        // printf("Process %d of %d: has adjList[%d][0] = %d.\n", rank, nprocs, i, g1.adjList[i][0]);
-    }
-
-    g1.getRichClubCoef();
-
     if (rank == 0){
     t2 = std::chrono::high_resolution_clock::now();
     auto dif = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
@@ -174,21 +165,15 @@ void Graph::getAdjList()
 
 void Graph::getGraphDegree()
 {
-
-    degrees.resize(this->nVertex, 0);
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    if (rank ==0){
+    this->degrees.resize(this->nVertex, 0);
     // Calcula o grau de cada nó e obtem o grau máximo
     for (auto i = 0; i < this->adjList.size(); i++)
     {
-        degrees[i] = (int)this->adjList[i].size();
-       if (degrees[i] > this->maxDegree) /*Obter o grau máximo aqui reduz um loop na lista de graus*/
-           this->maxDegree = degrees[i];
+        this->degrees[i] = (int)this->adjList[i].size();
+       if (this->degrees[i] > this->maxDegree) /*Obter o grau máximo aqui reduz um loop na lista de graus*/
+           this->maxDegree = this->degrees[i];
     }
-    }
-
-    return ;
+    return;
 }
 
 void Graph::getRichClubCoef()
@@ -200,7 +185,8 @@ void Graph::getRichClubCoef()
 
     // //  shared(degrees, adjList, _rks, maxDegree)
     for (int k = 0; k < maxDegree; k++) // Para cada k até k_max-1 calcula o coef. do clube dos ricos
-    {
+    { 
+
         float rk = 0.;   // Coeficiente de clube dos ricos
         int nk = 0;
         int i;
