@@ -78,8 +78,8 @@ int main(int argc, char *argv[])
     g1.vertA.reserve(g1.nEdges);
     g1.vertB.reserve(g1.nEdges);
     }
-    MPI_Bcast(&g1.vertA[0], g1.nVertex, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&g1.vertB[0], g1.nVertex, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&g1.vertA[0], g1.nEdges, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&g1.vertB[0], g1.nEdges, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
     printf("Process %d of %d: after vertA[0] = %d .\n", rank, nprocs, g1.vertA[0]);
     printf("Process %d of %d: after vertB[0] = %d .\n", rank, nprocs, g1.vertB[0]);
