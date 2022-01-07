@@ -62,7 +62,6 @@ int main(int argc, char *argv[])
 
 
     string filename = argv[1];
-    //Lê e inicializa o grafo
     Graph g1;
 
     if (rank == 0){
@@ -70,7 +69,7 @@ int main(int argc, char *argv[])
     }
 
     MPI_Bcast(&g1.nVertex, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    printf("Process %d of %d: has nVertex = %d .\n", rank, nprocs, g1.nVertex);
+    printf("Process %d of %d: has nVertex = %d.\n", rank, nprocs, g1.nVertex);
 
     if (rank == 0){
         // //Cronometrando tempo de execução
@@ -78,7 +77,7 @@ int main(int argc, char *argv[])
 
         g1.getAdjList();
     }
-    // MPI_Barrier(MPI_COMM_WORLD);
+
     g1.getGraphDegree();
     
     MPI_Bcast(&g1.degrees[0], g1.nVertex, MPI_INT, 0, MPI_COMM_WORLD);
@@ -88,7 +87,19 @@ int main(int argc, char *argv[])
     printf("Process %d of %d: has maxDegree = %d .\n", rank, nprocs, g1.maxDegree);
 
     MPI_Barrier(MPI_COMM_WORLD);
-    // g1.getRichClubCoef();
+
+    if (rank != 0) g1.adjList.reserve(g1.nVertex);
+
+    for (auto i=0; i<g1.nVertex; i++){
+        int size = g1.adjList[i].size();
+        MPI_Bcast(&size, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        // printf("Size of i = %d is %d.", i, size);
+        if (rank != 0) g1.adjList[i].reserve(size);
+        MPI_Bcast(&g1.adjList[i][0], size, MPI_INT, 0, MPI_COMM_WORLD);
+        // printf("Process %d of %d: has adjList[%d][0] = %d.\n", rank, nprocs, i, g1.adjList[i][0]);
+    }
+
+    g1.getRichClubCoef();
 
     if (rank == 0){
     t2 = std::chrono::high_resolution_clock::now();
@@ -183,50 +194,52 @@ void Graph::getGraphDegree()
 void Graph::getRichClubCoef()
 {
 
-    int maxDegree = this->maxDegree;
+    // int maxDegree = this->maxDegree;
     vector<float> _rks(maxDegree, 0.0); // Garante que o tamanho não seja alterado dinamicamente
-    vector<int> degrees = this->degrees;
+    // vector<int> degrees = this->degrees;
 
     // //  shared(degrees, adjList, _rks, maxDegree)
-    // for (int k = 0; k < maxDegree; k++) // Para cada k até k_max-1 calcula o coef. do clube dos ricos
-    // {
-    //     float rk = 0.;   // Coeficiente de clube dos ricos
-    //     int nk = 0;
-    //     int i;
+    for (int k = 0; k < maxDegree; k++) // Para cada k até k_max-1 calcula o coef. do clube dos ricos
+    {
+        float rk = 0.;   // Coeficiente de clube dos ricos
+        int nk = 0;
+        int i;
 
-    //     // Acha os nós com grau > k e conta os vizinhos com grau > k
-    //     //  shared(degrees,k) private(i) reduction(+:rk) reduction(+:nk)
-    //     for (i = 0; i < degrees.size(); i++)
-    //     {
-    //         if (degrees[i] > k)
-    //         {
+        // Acha os nós com grau > k e conta os vizinhos com grau > k
+        //  shared(degrees,k) private(i) reduction(+:rk) reduction(+:nk)
+        for (i = 0; i < degrees.size(); i++)
+        {
+            if (degrees[i] > k)
+            {
                 
-    //             // Armazena o numero total de membros do clube dos ricos 
-    //             nk += 1;
+                // Armazena o numero total de membros do clube dos ricos 
+                nk += 1;
 
-    //             /* Procurar iterativamente na lista de adj ao incluir um vértice foi a melhor alternativa 
-    //             encontrada para calcular o valor do somatorio do coef. rk, pois principalmente para k 
-    //             pequeno o custo de percorrer Rk é muito maior que percorrer a lista de adj do vértice. */
-    //             // Procura na lista de adj por conexões que tenham grau maior que k
-    //             std::for_each(adjList[i].begin(), adjList[i].end(), [&](auto &item) -> void
-    //                           {
-    //                               if (degrees[item] > k)
-    //                                   // Calculo o somatório contando cada vizinho que também participa do clube
-    //                                   rk += 1;
-    //                           });
-    //         }
-    //     }
+                /* Procurar iterativamente na lista de adj ao incluir um vértice foi a melhor alternativa 
+                encontrada para calcular o valor do somatorio do coef. rk, pois principalmente para k 
+                pequeno o custo de percorrer Rk é muito maior que percorrer a lista de adj do vértice. */
+                // Procura na lista de adj por conexões que tenham grau maior que k
+                std::for_each(adjList[i].begin(), adjList[i].end(), [&](auto &item) -> void
+                              {
+                                  if (degrees[item] > k)
+                                      // Calculo o somatório contando cada vizinho que também participa do clube
+                                      rk += 1;
+                              });
+            }
+        }
 
-    //     if (nk > 1){
-    //         rk /= (float)(nk * (nk - 1.));
-    //     }
-    //     else{
-    //         rk = 1;
-    //     }
+        if (nk > 1){
+            rk /= (float)(nk * (nk - 1.));
+        }
+        else{
+            rk = 1;
+        }
 
-    //     _rks[k] = rk;
-    // }
-
+        _rks[k] = rk;
+    }
+    // float *data = NULL;
+    // if (rank==0) data = (float *) malloc(nprocs)*sizeof(float); 
+    // MPI_Gather(&rk, 2, MPI_FLOAT, &data, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
     // this->rks = _rks;
     return;
 }
@@ -254,4 +267,4 @@ void Graph::printResult(string filename)
     }
     outputFile.close();
     return;
-}       
+}
