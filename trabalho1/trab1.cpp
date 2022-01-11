@@ -22,12 +22,6 @@ using namespace std;
 
 // Lê o arquivo de entrada que contém o tamanho e as arestas do grafo
 void read(string filename, int &nVertex, int &nEdges, vector<int> &vertA, vector<int> &vertB);
-// Computa a lista de adj do grafo
-
-// Computa o grau de cada nó
-
-// Computa o coef. de clube dos ricos do grafo para o grau 0 até o grau máximo - 1
-
 
 // Armazena os resultados no arquivo de saida com a extensão .rcb
 void printResult(string filenameOutput, vector<float> rks);
@@ -52,6 +46,7 @@ int main(int argc, char *argv[])
     e por facilitar o acesso aos vizinhos do vértice.
     */
 
+    // Obtendo a lista de adj do grafo
     matrix_t adjList(nVertex);
 
     // Para cada vertice atualiza a lista de adj do nó correspondente
@@ -61,10 +56,11 @@ int main(int argc, char *argv[])
         adjList[vertB[i]].emplace_back(vertA[i]);
     }
 
+    // Obtendo o grau de cada nó
     vector<int> degrees(nVertex, 0);
     int maxDegree = 0;
 
-    // Calcula o grau de cada nó e obtem o grau máximo
+    // Calculo do grau de cada nó e obtem o grau máximo
     for (auto i = 0; i < adjList.size(); i++)
     {
         degrees[i] = (int)adjList[i].size();
@@ -72,6 +68,7 @@ int main(int argc, char *argv[])
             maxDegree = degrees[i];
     }
     
+    // Calculo do coef. de clube dos ricos do grafo para o grau 0 até o grau máximo - 1
     vector<float> rks;
 
     //Calcula o coeficiente
