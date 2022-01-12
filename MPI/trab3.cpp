@@ -111,29 +111,25 @@ int main(int argc, char *argv[])
 
     vector<float> partial_rk_list;
     vector<int> counts(nprocs), displs(nprocs);
-    nprocs = 5;
     //Divisão dos passos
-    int max_elem = 7;//maxDegree; //kmax
-    int q = max_elem / nprocs;                                           // Quociente
-    int r = max_elem % nprocs;                                           // Resto
-    auto first_q = fill_n(begin(counts), r, q + 1);                      // Q + 1 no primeiro contador
-    fill(first_q, end(counts), q);                                       // Q no resto
+    int kmax = maxDegree;                       //kmax
+    int q = kmax / nprocs;                      // Quociente
+    int r = kmax % nprocs;                      // Resto
+    auto first_q = fill_n(begin(counts), r, q + 1); // Q + 1 no primeiro contador
+    fill(first_q, end(counts), q);                  // Q no resto
     displs[0] = 0;
     partial_sum(begin(counts), end(counts) - 1, begin(displs) + 1); // Preenche displs com o índice que cada proc deve iniciar
 
-    //For levando em conta a divisão dos passos para o calculo do rcc
-    for (int i = displs[rank]; i < displs[rank] + counts[rank]; i++)
-    {
-        printf("Process %d of %d: has k = %d, kmax = %d.\n", rank, nprocs, i, max_elem);
-    }
-
     // Calculo do coef. de clube dos ricos do grafo para o grau 0 até o grau máximo - 1
-    vector<float> rks(maxDegree, 0.0); // Garante que o tamanho não seja alterado dinamicamente
+    // vector<float> rks(maxDegree, 0.0); // Garante que o tamanho não seja alterado dinamicamente
     // printf("Process %d of %d: has rks = %d .\n", rank, nprocs, maxDegree);
     // printf("Process %d of %d: has maxDegree = %d, rks.size = %d .\n", rank, nprocs, maxDegree, rks.size());
     //Calcula o coeficiente
-    for (int k = 0; k < maxDegree; k++) // Para cada k até k_max -1 calcula o coef. do clube dos ricos
+    // for (int k = 0; k < maxDegree; k++) // Para cada k até k_max -1 calcula o coef. do clube dos ricos
+        //For levando em conta a divisão dos passos para o calculo do rcc
+    for (int k = displs[rank]; k < displs[rank] + counts[rank]; k++)
     {
+        k = kmax - k;
         vector<int> R_k; // Armazena o lista de vertices do clube dos ricos
         float rk = 0.;   // Coeficiente de clube dos ricos
 
@@ -163,14 +159,23 @@ int main(int argc, char *argv[])
         else
             rk = 1;
 
-        rks[k] = rk;
+        // rks[k] = rk;
+        partial_rk_list.push_back(rk);
         // printf("Process %d of %d: has rk[%d] = %f .\n", rank, nprocs, k, rks[k]);
+        printf("Process %d of %d: has k = %d, rk = %.5f, kmax = %d.\n", rank, nprocs, k, rk, kmax);
     }
     // printf("Process %d of %d: has rks = %d .\n", rank, nprocs, rks[0]);
 
     MPI_Barrier( MPI_COMM_WORLD);
+
+    // Transferencia dos dados para o rank 0
+    vector<float> rks = vector<float>(kmax); // Variavel real
+    MPI_Gatherv(&partial_rk_list[0], counts[rank], MPI_FLOAT,
+                &rks[0], &counts[0], &displs[0], MPI_FLOAT, 0, MPI_COMM_WORLD);
+
     // printf("Process %d of %d: after rk[0] = %f .\n", rank, nprocs, rks[0]);
     // printf("Process %d of %d: after rk[1] = %f .\n", rank, nprocs, rks[1]);
+
 
     if (rank == 0) {
         auto t2 = std::chrono::high_resolution_clock::now();
