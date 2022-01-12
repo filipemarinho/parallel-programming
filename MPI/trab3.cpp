@@ -10,6 +10,9 @@
 #include <mpi.h>
 #include <stdio.h>
 
+// #include <algorithm>
+#include <numeric>
+
 typedef std::vector<std::vector<int>> matrix_t;
 
 enum Error
@@ -43,7 +46,7 @@ int main(int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    printf("Process %d of %d is running.\n", rank, nprocs);
+    // printf("Process %d of %d is running.\n", rank, nprocs);
     
     string filename = argv[1];
 
@@ -54,10 +57,10 @@ int main(int argc, char *argv[])
     if (rank == 0) read(filename, nVertex, nEdges, vertA, vertB);
     
     MPI_Bcast(&nVertex, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    printf("Process %d of %d: has nVertex = %d.\n", rank, nprocs, nVertex);
+    // printf("Process %d of %d: has nVertex = %d.\n", rank, nprocs, nVertex);
 
     MPI_Bcast(&nEdges, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    printf("Process %d of %d: has nEdges = %d.\n", rank, nprocs, nEdges);
+    // printf("Process %d of %d: has nEdges = %d.\n", rank, nprocs, nEdges);
 
     if (rank !=0){
     vertA.reserve(nEdges);
@@ -65,8 +68,8 @@ int main(int argc, char *argv[])
     }
     MPI_Bcast(&vertA[0], nEdges, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(&vertB[0], nEdges, MPI_INT, 0, MPI_COMM_WORLD);
-    printf("Process %d of %d: after vertA[0] = %d .\n", rank, nprocs, vertA[nEdges-1]);
-    printf("Process %d of %d: after vertB[0] = %d .\n", rank, nprocs, vertB[nEdges-1]);
+    // printf("Process %d of %d: after vertA[0] = %d .\n", rank, nprocs, vertA[nEdges-1]);
+    // printf("Process %d of %d: after vertB[0] = %d .\n", rank, nprocs, vertB[nEdges-1]);
 
     //Cronometrando tempo de execução
     auto t1 = std::chrono::high_resolution_clock::now();
@@ -105,9 +108,28 @@ int main(int argc, char *argv[])
         MPI_Finalize();
         exit(BAD_ARGUMENT);
     }
+
+    vector<float> partial_rk_list;
+    vector<int> counts(nprocs), displs(nprocs);
+    nprocs = 5;
+    //Divisão dos passos
+    int max_elem = 7;//maxDegree; //kmax
+    int q = max_elem / nprocs;                                           // Quociente
+    int r = max_elem % nprocs;                                           // Resto
+    auto first_q = fill_n(begin(counts), r, q + 1);                      // Q + 1 no primeiro contador
+    fill(first_q, end(counts), q);                                       // Q no resto
+    displs[0] = 0;
+    partial_sum(begin(counts), end(counts) - 1, begin(displs) + 1); // Preenche displs com o índice que cada proc deve iniciar
+
+    //For levando em conta a divisão dos passos para o calculo do rcc
+    for (int i = displs[rank]; i < displs[rank] + counts[rank]; i++)
+    {
+        printf("Process %d of %d: has k = %d, kmax = %d.\n", rank, nprocs, i, max_elem);
+    }
+
     // Calculo do coef. de clube dos ricos do grafo para o grau 0 até o grau máximo - 1
     vector<float> rks(maxDegree, 0.0); // Garante que o tamanho não seja alterado dinamicamente
-    printf("Process %d of %d: has rks = %d .\n", rank, nprocs, maxDegree);
+    // printf("Process %d of %d: has rks = %d .\n", rank, nprocs, maxDegree);
     // printf("Process %d of %d: has maxDegree = %d, rks.size = %d .\n", rank, nprocs, maxDegree, rks.size());
     //Calcula o coeficiente
     for (int k = 0; k < maxDegree; k++) // Para cada k até k_max -1 calcula o coef. do clube dos ricos
@@ -142,9 +164,9 @@ int main(int argc, char *argv[])
             rk = 1;
 
         rks[k] = rk;
-        printf("Process %d of %d: has rk[%d] = %f .\n", rank, nprocs, k, rks[k]);
+        // printf("Process %d of %d: has rk[%d] = %f .\n", rank, nprocs, k, rks[k]);
     }
-    printf("Process %d of %d: has rks = %d .\n", rank, nprocs, rks[0]);
+    // printf("Process %d of %d: has rks = %d .\n", rank, nprocs, rks[0]);
 
     MPI_Barrier( MPI_COMM_WORLD);
     // printf("Process %d of %d: after rk[0] = %f .\n", rank, nprocs, rks[0]);
@@ -198,6 +220,7 @@ void read(string filename, int &nVertex, int &nEdges, vector<int> &vertA, vector
 
 void printResult(string filename, vector<float> rks)
 {
+    cout << "Done writing " << filename << endl;
     // Muda a extensão
     filename.resize(filename.size() - 3);
     filename += "rcb";
