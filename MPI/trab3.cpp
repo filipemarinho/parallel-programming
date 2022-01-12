@@ -100,13 +100,14 @@ int main(int argc, char *argv[])
         if (degrees[i] > maxDegree) 
             maxDegree = degrees[i];
     }
-    if (maxDegree = 0) {
+    if (maxDegree == 0) {
         printf("Bad max degree :C");
         MPI_Finalize();
         exit(BAD_ARGUMENT);
     }
     // Calculo do coef. de clube dos ricos do grafo para o grau 0 até o grau máximo - 1
     vector<float> rks(maxDegree, 0.0); // Garante que o tamanho não seja alterado dinamicamente
+    printf("Process %d of %d: has rks = %d .\n", rank, nprocs, maxDegree);
     // printf("Process %d of %d: has maxDegree = %d, rks.size = %d .\n", rank, nprocs, maxDegree, rks.size());
     //Calcula o coeficiente
     for (int k = 0; k < maxDegree; k++) // Para cada k até k_max -1 calcula o coef. do clube dos ricos
@@ -143,16 +144,18 @@ int main(int argc, char *argv[])
         rks[k] = rk;
         printf("Process %d of %d: has rk[%d] = %f .\n", rank, nprocs, k, rks[k]);
     }
-    // printf("Process %d of %d: has rks.size = %d .\n", rank, nprocs, rks.size());
+    printf("Process %d of %d: has rks = %d .\n", rank, nprocs, rks[0]);
 
     MPI_Barrier( MPI_COMM_WORLD);
     // printf("Process %d of %d: after rk[0] = %f .\n", rank, nprocs, rks[0]);
     // printf("Process %d of %d: after rk[1] = %f .\n", rank, nprocs, rks[1]);
-    auto t2 = std::chrono::high_resolution_clock::now();
-    auto dif = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    cout << "Elasped time " << dif << " seconds." << endl;
 
-    if (rank ==0) printResult(filename, rks);
+    if (rank == 0) {
+        auto t2 = std::chrono::high_resolution_clock::now();
+        auto dif = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+        cout << "Elasped time " << dif << " seconds." << endl;
+        printResult(filename, rks);
+    }
     MPI_Finalize();
     return SUCCESS;
 }
