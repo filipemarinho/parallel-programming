@@ -1,51 +1,53 @@
 //g++ -o trab1.o trab1.cpp && ./trab1.o rich-club-results/small-1-001.net && diff -w rich-club-results/medium-1-001.rcb rich-club-expected/medium-1-001.rcb 
 //Testar com flags adicionais: -g -std=c++17 -pedantic -Wall -Wextra -Werror -Wshadow -Wconversion -Wunreachable-code
 /*
-np = 2
-real    9m27,862s
-user    17m11,299s
-sys     0m17,614s
+Serial:
+    real    12m42,141s
+    user    12m32,452s
+    sys     0m4,239s
+    Com -O2
+    real    3m48,944s
+    user    3m44,736s
+    sys     0m4,167s 
 
-np = 4
-real    10m22,855s
-user    35m57,465s
-sys     0m34,143s
+MPI:
+    np = 4
+    real    9m3,818s
+    user    33m26,608s
+    sys     0m28,996s
 
-np = 8
-real    15m26,972s
-user    70m16,303s
-sys     38m19,185s
+    Com -O2
+    real    3m12,701s
+    user    10m15,649s
+    sys     0m26,558s
 
-real    13m33,779s
-user    66m20,910s
-sys     33m29,364s
+    np = 2 Com -O2
+    real    2m57,125s
+    user    4m46,236s
+    sys     0m15,259s
+    
+    np = 8 Com -O2
+    real    5m46,801s
+    user    24m7,700s
+    sys     14m20,250s
 
-real    14m5,722s
-user    67m35,047s
-sys     36m25,092s
-
-np = 16
-real    20m58,988s
-user    88m17,842s
-sys     66m57,755s
-
-without  Rk
-real    21m21,862s
-user    89m57,968s
-sys     68m25,752s
-
--o2, np = 16
-real    8m31,697s
-user    35m47,770s
-sys     25m27,927s
-
-real    8m20,293s
-user    34m48,595s
-sys     24m54,379s
--o2, np = 8
-real    4m55,619s
-user    22m26,317s
-sys     11m35,146s
+OpenMP:
+    NUM_THREADS = 4
+    real    7m18,920s
+    user    11m14,062s
+    sys     0m4,376s
+    NUM_THREADS = 8
+    real    6m32,280s
+    user    14m50,602s
+    sys     0m7,771s
+    NUM_THREADS = 8 e -O2
+    real    1m44,760s
+    user    3m8,601s
+    sys     0m4,207s
+    NUM_THREADS = 4 e -O2
+    real    1m51,823s
+    user    2m30,075s
+    sys     0m4,100s   
 
 */
 
@@ -80,15 +82,16 @@ void read(string filename, int &nVertex, int &nEdges, vector<int> &vertA, vector
 // Armazena os resultados no arquivo de saida com a extensão .rcb
 void printResult(string filenameOutput, vector<float> rks);
 
-void compute_partition(int N, int p, vector<int> &count, vector<int> &offset) {
-  int q = N / p;
-  int r = N % p;
+void compute_partition(int N, int p, vector<int> &count, vector<int> &offset) { 
+  int q = N / (p);
+  int r = N % (p);
   int curr_off = 0;
-  for (int i = 0; i < p; ++i) {
-    count[i] = i < r ? q : q+1+r;
+  for (int i = 0; i < p; ++i) { //for all ranks
+    count[i] = i < r ? q+1 : q;
     offset[i] = curr_off;
     curr_off += count[i];
   }
+
 }
 
 int main(int argc, char *argv[])
@@ -156,45 +159,21 @@ int main(int argc, char *argv[])
         exit(BAD_ARGUMENT);
     }
 
-    // vector<float> partial_rk_list;
-    // vector<int> counts(nprocs), displs(nprocs);
     vector<float> partial_rk_list;
     vector<int> count(nprocs), offset(nprocs);
     int N = maxDegree;
-    compute_partition(N, nprocs, count, offset);
+    if (maxDegree < 1000 && nprocs > 2) {
+        compute_partition(N, 2, count, offset);
+    }
+    else{
+        compute_partition(N, nprocs, count, offset);
+    } 
 
 
     //Divisão dos elementos para os os processos
     int kmax = maxDegree;                       //kmax = n_elem
-    // int q = kmax / (nprocs);                      // Quociente
-    // int r = kmax % (nprocs);                      // Resto
-    // auto first_q = fill_n(begin(counts), r, q + 1); // Q + 1 elementos no primeiro contador
-    // printf("rank = %d: ", rank);
-    // for (int x = 0; x < nprocs; x++){
-    //     printf("counts[%d] = %d ", x, counts[x]);
-    // }
-    // fill(first_q, end(counts), q);                  // Q elementos no resto
-    // for (int x = 0; x < nprocs; x++){
-    //     printf("counts_a[%d] = %d ", x, counts[x]);
-    // }
-    // printf("rank = %d: \n", rank);
-    // displs[0] = 0;
-    // partial_sum(begin(counts), end(counts) - 1, begin(displs) + 1); // Preenche displs com o índice que cada proc deve iniciar
-    // if (rank ==0 )printf("kmax = %d, q = %d , r = %d \n", kmax, q, r);
-    // for (int x = 0; x < nprocs; x++){
-    //     printf("displs[%d] = %d, ", x, displs[x]);
-    //     printf("counts [%d] = %d, ", x, counts[x]);
-    //     // printf("displs[%d] = k = %d, r = %d , q*x = %d\n", x, novo, rank, q*x);
-    // }
-    // printf("rank = %d: \n", rank);
+    // if (rank ==0 )printf("kmax = %d, q = %d , r = %d \n", kmax,  kmax / (nprocs),  kmax % (nprocs));
     // Calculo do coef. de clube dos ricos do grafo para o grau 0 até o grau máximo - 1
-    // vector<float> rks(maxDegree, 0.0); // Garante que o tamanho não seja alterado dinamicamente
-    // printf("Process %d of %d: has rks = %d .\n", rank, nprocs, maxDegree);
-    // printf("Process %d of %d: has maxDegree = %d, rks.size = %d .\n", rank, nprocs, maxDegree, rks.size());
-    //Calcula o coeficiente
-    // for (int k = 0; k < maxDegree; k++) // Para cada k até k_max -1 calcula o coef. do clube dos ricos
-        //For levando em conta a divisão dos passos para o calculo do rcc
-    // for (int k = displs[rank]+ counts[rank]; k < displs[rank] ; k--)
     for (int k = offset[rank]; k < offset[rank] + count[rank] ; k++)
     {
         // vector<int> R_k; // Armazena o lista de vertices do clube dos ricos
@@ -236,7 +215,7 @@ int main(int argc, char *argv[])
 
         // rks[k] = rk;
         partial_rk_list.push_back(rk);
-        printf("Process %d of %d: has k = %d, rk = %.5f, kmax = %d.\n", rank, nprocs, k, rk, kmax);
+        // printf("Process %d of %d: has k = %d, rk = %.5f, kmax = %d.\n", rank, nprocs, k, rk, kmax);
     }
 
     MPI_Barrier( MPI_COMM_WORLD);
