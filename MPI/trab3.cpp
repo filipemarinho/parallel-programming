@@ -1,6 +1,11 @@
 //g++ -o trab1.o trab1.cpp && ./trab1.o rich-club-results/small-1-001.net && diff -w rich-club-results/medium-1-001.rcb rich-club-expected/medium-1-001.rcb 
 //Testar com flags adicionais: -g -std=c++17 -pedantic -Wall -Wextra -Werror -Wshadow -Wconversion -Wunreachable-code
 /*
+Filipe Antunes Marinho - 10438866
+A paralelização foi feita com base na distribuição de dados dos problema, devido a independência dos calculos de cada um dos coeficientes r[k], foram distribuidos os indices k entre os processos disponiveis.
+A disponibilização dos dados para os outros processos foi feita pelo broadcast dos vertices lidos do arquivo.
+Isso pois a lista de vértice ao contrário da lista de adjacência tem tamanho bem definido e pode ser enviado por um único buffer. Além disso sabe-se do trabalho passado que o custo computacional da obtenção da lista de adj e de graus é bem menor que o do calculo do coeficiente em si.
+
 Serial:
     real    12m42,141s
     user    12m32,452s
@@ -25,7 +30,7 @@ MPI:
     real    2m57,125s
     user    4m46,236s
     sys     0m15,259s
-    
+
     np = 8 Com -O2
     real    5m46,801s
     user    24m7,700s
