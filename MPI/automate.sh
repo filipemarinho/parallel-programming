@@ -8,10 +8,10 @@ path="$HOME/git/Grad/parallel-programming/MPI"
 for file in $path/rich-club-results/*; do
     if [ "${file##*.}" = "net" ]; then
         echo "Reading file: " $file
-        mpirun "$path/trab3.o" $file >> automate.dat
+        mpirun --oversubscribe -np 8 "$path/trab3.o" $file >> automate.dat
     fi
 done
 echo "Sucess! Verifying output data..."
-# diff -w -s rich-club-results/ rich-club-expected/
+diff -w -s rich-club-results/ rich-club-expected/
 echo Done
 
