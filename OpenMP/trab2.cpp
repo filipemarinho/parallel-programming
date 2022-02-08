@@ -196,6 +196,8 @@ void Graph::getRichClubCoef()
         int i;
 
         // Acha os nós com grau > k e conta os vizinhos com grau > k
+        //CUIDADO: fors aninhados tem que ser explicitamente habilitados no openmp
+        
         #pragma omp parallel for default(none) shared(degrees,k) \
             private(i) reduction(+:rk) reduction(+:nk)
         for (i = 0; i < degrees.size(); i++)
