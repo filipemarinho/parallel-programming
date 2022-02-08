@@ -1,18 +1,4 @@
 /*
-Filipe Antunes Marinho - 10438866
-Para paralelização foi utilizada uma abordagem baseada na distribuição dos dados do problema.
-Foram calculados os tempos gastos em cada método da classe pra diversos inputs, 
-com isso foi possivel perceber que a maior parte do tempo de execução era gasto 
-na rotina de cálculo do coeficiente, mas os tempos de leitura, inicialização da 
-lista de adj e computação dos graus escalava bem com o tamanho do problema.
-Então foi feita a paralelização somente do método 'getRichClubCoef'.
-
-A partir da analise do grafo de dependencia do problema é fácil achar regiões 
-com computações independentes para paralelização. Assim foram paralelizados o 
-loop de calculo dos rk's e o loop de busca dos participantes do clube, membros de Rk. 
-Quando k é pequeno o tamanho de Rk tende ao número de nós no grafo. 
-Isso cria um desbalanceamento de carga no problema, por isso a paralelização do calculos dos rk's
-foi necessária, para aumentar a granulosidade do problema evitando que uma thread fique sobrecarregada.  
 
 Foi criado um script para ler e executar todos os arquivos testes e o tempo de execução foi cronometrado 
 utilizando o comando 'time' para servir de métrica para comparação
@@ -208,9 +194,6 @@ void Graph::getRichClubCoef()
                 // Armazena o numero total de membros do clube dos ricos 
                 nk += 1;
 
-                /* Procurar iterativamente na lista de adj ao incluir um vértice foi a melhor alternativa 
-                encontrada para calcular o valor do somatorio do coef. rk, pois principalmente para k 
-                pequeno o custo de percorrer Rk é muito maior que percorrer a lista de adj do vértice. */
                 // Procura na lista de adj por conexões que tenham grau maior que k
                 std::for_each(adjList[i].begin(), adjList[i].end(), [&](auto &item) -> void
                               {
