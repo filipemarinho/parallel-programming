@@ -1,11 +1,4 @@
 /*
-Filipe Antunes Marinho - 10438866
-A paralelização foi feita com base na distribuição de dados dos problema, devido a independência dos calculos de cada um dos coeficientes r[k], foram distribuidos os indices k entre os processos disponiveis.
-A disponibilização dos dados para os outros processos foi feita pelo broadcast dos vertices lidos do arquivo.
-Isso pois a lista de vértice ao contrário da lista de adjacência tem tamanho bem definido e pode ser enviado por um único buffer. 
-Além disso sabe-se do trabalho passado que o custo computacional da obtenção da lista de adj e de graus é bem menor que o do calculo do coeficiente em si.
-
-
 Foi utilizado o mesmo bash script para ler e executar todos os arquivos testes e o tempo de execução foi cronometrado 
 utilizando o comando 'time' para servir de métrica para comparação. Foram obtidos:
 
@@ -51,10 +44,6 @@ OpenMP:
     user    3m8,601s
     sys     0m4,207s
 
-Os resultados obtidos mostram desempenho melhor que o caso Serial, mas piores que com o uso do OpemMP
-Existem problemas de escalabilidade nesse código. Possivelmente causados pelo desbalanceamento de carga
-causados pela distribuição consecutiva dos indices k de grau para o calculo do coeficiente.
-Mas uma distribuição de indices em ordem diferentes se mostrou muito complexa para recuperação dos valores de r[k].
 */
 
 #include <iostream>
@@ -169,9 +158,6 @@ int main(int argc, char *argv[])
     {
         compute_partition(N, nprocs, count, offset);
     }
-    // Entretanto a função compute_partions retornara as listas de indices locais em sequencia o que acaba causando um desbalanceamento de carga
-    // Pois um processo encarregado dos indices k = {0,1,2} terá um tempo de execução muito maior do que um processo com k = {3,4,5}
-    // Pois quanto menor o k mais elementos estão presentes no subgrafo
 
     // Calculo do coef. de clube dos ricos do grafo para o conjuntos de ks locais dados pela compute_partition
     for (int k = offset[rank]; k < offset[rank] + count[rank]; k++)
@@ -188,9 +174,6 @@ int main(int argc, char *argv[])
                 // R_k.emplace_back(i);
                 nk += 1;
 
-                /* Procurar iterativamente na lista de adj ao incluir um vértice foi a melhor alternativa 
-                encontrada para calcular o valor do somatorio do coef. rk,
-                pois principalmente para k pequeno o custo de percorrer Rk é muito maior que percorrer a lista de adj do vértice. */
                 // Procura na lista de adj por conexões que tenham grau maior que k
                 std::for_each(adjList[i].begin(), adjList[i].end(), [&](auto &item) -> void
                               {
