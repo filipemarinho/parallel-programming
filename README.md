@@ -2,7 +2,7 @@
 
 Repo to store projects of parallel programming.
 
-Includes three implementation of the Rich Club Coefficient in Graphs, one Serial implementation and two Parallel implementations.
+Includes three implementation of the Rich Club Coefficient in Graphs, one Serial implementation and two Parallel implementations exploring parrallel programming in C++.
 
 
 ---
@@ -16,8 +16,3 @@ Wikipedia Definition:[^origin]
  [^origin]: Wikipedia contributors. (2023, March 14). Rich-club coefficient. In Wikipedia, The Free Encyclopedia. Retrieved 11:53, April 14, 2023, from https://en.wikipedia.org/w/index.php?title=Rich-club_coefficient&oldid=1144638929
  [^1]: Zhou, Shi & Mondragón, Raúl J. (2004). "The Rich-Club Phenomenon In The Internet Topology". IEEE Communications Letters. 8 (3): 180–182. arXiv:cs/0308036. doi:10.1109/lcomm.2004.823426. S2CID 7007263.
  [^2]: Mattia Gasparini, Javier Luis Canovas Izquierdo, Robert Clariso, Marco Brambilla, Jordi Cabot: Analyzing Rich-Club Behavior in Open Source Projects. OpenSym 2019 proceedings
-
-
-
-
-
